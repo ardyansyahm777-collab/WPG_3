@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1175941370452595080
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5026584462434670530}
+  - component: {fileID: 6550139818366320816}
+  - component: {fileID: 4275459757136003024}
+  - component: {fileID: 5165658162105719484}
+  - component: {fileID: 6337280652953239868}
+  m_Layer: 0
+  m_Name: Systems
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5026584462434670530
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1175941370452595080}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6550139818366320816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1175941370452595080}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 989a76f1dc114626b1005e712b3df60f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: WPG_3.Scripts::WpgGame.Progression.UpgradeSystem
+  Pool:
+  - {fileID: 11400000, guid: fd22ed611fab42b38381c3c990fa8402, type: 2}
+  - {fileID: 11400000, guid: 7631450e4442433eb5ca97e4d860bd1e, type: 2}
+  - {fileID: 11400000, guid: 11d727547c9e46f9bd09de0030a71b6c, type: 2}
+  - {fileID: 11400000, guid: 8886988b567b424abd64912cd76cb0ff, type: 2}
+  - {fileID: 11400000, guid: ba5fabdfa4254e8988f3e02a20cc7b0c, type: 2}
+  ChoicesPerLevelUp: 3
+  playerStats: {fileID: 0}
+--- !u!114 &4275459757136003024
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1175941370452595080}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6899bbd3420d72d418d9edf1d86b334e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: WPG_3.Scripts::WpgGame.Progression.RewardRouter
+  expPerKill: 10
+  goldPerKill: 5
+--- !u!114 &5165658162105719484
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1175941370452595080}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 221398c294064161b045f7cca2a0abc4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: WPG_3.Scripts::WpgGame.Progression.LevelUpSystem
+  baseExpPerLevel: 50
+  currentExp: 0
+  currentLevel: 1
+--- !u!114 &6337280652953239868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1175941370452595080}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ab41991278c4c52bafae40ab8ca4f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: WPG_3.Scripts::WpgGame.Economy.GoldManager
+  currentGold: 0

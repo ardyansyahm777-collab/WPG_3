@@ -69,7 +69,14 @@ namespace WpgGame.Core
 
         public void Restart()
         {
-            // Reset sederhana: reload active scene.
+            // Restart bersih: buang subscriber statis scene lama agar tidak basi,
+            // reset state langsung (bypass cooldown), lalu reload active scene.
+            // Instance DontDestroyOnLoad selamat dari reload, jadi reset eksplisit wajib.
+            GameEvents.ClearAll();
+            OnStateChanged = null;
+            State = GameState.Playing;
+            _lastStateChangeTime = Time.unscaledTime;
+
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
             UnityEngine.SceneManagement.SceneManager.LoadScene(scene.buildIndex);
         }
