@@ -28,11 +28,44 @@ namespace WpgGame.Core
         private static void EnsureEventSystem()
         {
             var existing = FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>();
-            if (existing != null) return;
-            var go = new GameObject("[EventSystem]");
-            go.AddComponent<UnityEngine.EventSystems.EventSystem>();
-            // Pakai InputSystemUIInputModule agar cocok dengan paket com.unity.inputsystem.
-            go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            if (existing == null)
+            {
+                var go = new GameObject("[EventSystem]");
+                go.AddComponent<UnityEngine.EventSystems.EventSystem>();
+                // Pakai InputSystemUIInputModule agar cocok dengan paket com.unity.inputsystem.
+                existing = go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>()
+                    .GetComponent<UnityEngine.EventSystems.EventSystem>();
+            }
+            EnsureUiActions(existing);
+        }
+
+        /// <summary>
+        /// Pastikan module UI punya action refs yang hidup. Tanpa ini (asset terisi
+        /// tapi action null, mis. prefab kehilangan sub-objek InputActionReference),
+        /// HasNoActions() = false sehingga fallback default TIDAK jalan dan seluruh
+        /// input UI mati total (hover/klik/keyboard). Aman di runtime & build
+        /// (tanpa AssetDatabase: hanya memakai actionsAsset yang sudah terpasang).
+        /// </summary>
+        private static void EnsureUiActions(UnityEngine.EventSystems.EventSystem es)
+        {
+            var module = es.GetComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            if (module == null) return;
+            if (module.actionsAsset == null)
+            {
+                module.AssignDefaultActions();
+                return;
+            }
+            var asset = module.actionsAsset;
+            if (module.point == null || module.point.action == null)
+                module.point = UnityEngine.InputSystem.InputActionReference.Create(asset.FindAction("UI/Point"));
+            if (module.move == null || module.move.action == null)
+                module.move = UnityEngine.InputSystem.InputActionReference.Create(asset.FindAction("UI/Navigate"));
+            if (module.leftClick == null || module.leftClick.action == null)
+                module.leftClick = UnityEngine.InputSystem.InputActionReference.Create(asset.FindAction("UI/Click"));
+            if (module.submit == null || module.submit.action == null)
+                module.submit = UnityEngine.InputSystem.InputActionReference.Create(asset.FindAction("UI/Submit"));
+            if (module.cancel == null || module.cancel.action == null)
+                module.cancel = UnityEngine.InputSystem.InputActionReference.Create(asset.FindAction("UI/Cancel"));
         }
 
         private static void EnsureMainCamera()
