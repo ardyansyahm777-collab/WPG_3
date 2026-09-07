@@ -82,11 +82,10 @@ namespace WpgGame.Player
             if (player == null) return;
             var health = player.GetComponent<HealthSystem>();
             if (health == null) return;
-            if (_subscribedHealth == health) return;
-            if (_subscribedHealth != null)
-            {
-                _subscribedHealth.OnDeath -= HandleSubscribedPlayerDeath;
-            }
+            // Remove-then-add: jamin tepat satu subscription apapun kondisi statis.
+            // (Aman untuk AvoidDomainReload: statis basi antar sesi play tidak
+            // bisa menyebabkan subscription hilang maupun ganda.)
+            health.OnDeath -= HandleSubscribedPlayerDeath;
             health.OnDeath += HandleSubscribedPlayerDeath;
             _subscribedHealth = health;
         }
