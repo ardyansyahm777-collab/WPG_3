@@ -62,6 +62,13 @@ namespace WpgGame.Enemy
         {
             if (_rb == null || Health == null || Health.IsDead) return;
 
+            // Freeze saat state bukan Playing (mis. popup LevelUp): diam, jangan kejar player.
+            if (IsGameplayFrozen())
+            {
+                _rb.linearVelocity = Vector2.zero;
+                return;
+            }
+
             if (_player == null)
             {
                 _player = FindAndCachePlayer();
@@ -95,6 +102,8 @@ namespace WpgGame.Enemy
 
         private void TryContact(Collider2D other)
         {
+            // Freeze saat state bukan Playing: tidak memberi contact damage.
+            if (IsGameplayFrozen()) return;
             if (other == null || Time.time < _nextContactTime) return;
             if (other.GetComponentInParent<PlayerStats>() == null) return;
 
@@ -109,6 +118,13 @@ namespace WpgGame.Enemy
         {
             var controller = FindFirstObjectByType<PlayerController>();
             return controller != null ? controller.transform : null;
+        }
+
+        private bool IsGameplayFrozen()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) return false;
+            return gm.State != GameManager.GameState.Playing;
         }
     }
 }

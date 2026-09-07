@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using WpgGame.Core;
 using WpgGame.Player;
 
 namespace WpgGame.Combat
@@ -57,6 +58,24 @@ namespace WpgGame.Combat
 
         private void Update()
         {
+            // Freeze saat state bukan Playing (mis. popup LevelUp): diam di tempat,
+            // lifetime TIDAK berkurang agar tembakan tidak hilang sia-sia selama freeze.
+            if (IsGameplayFrozen())
+            {
+                if (_rb != null && _rb.linearVelocity != Vector2.zero)
+                {
+                    _rb.linearVelocity = Vector2.zero;
+                }
+                return;
+            }
+
+            // Pulihkan kecepatan setelah freeze (velocity sempat di-nol-kan di atas).
+            if (_rb != null && _direction.sqrMagnitude > 0.0001f
+                && _rb.linearVelocity.sqrMagnitude < 0.0001f)
+            {
+                _rb.linearVelocity = _direction * Speed;
+            }
+
             _lifeTimer += Time.deltaTime;
             bool timeout = _lifeTimer >= Lifetime;
             bool outOfRange = MaxRange > 0f && Vector2.Distance(_startPosition, transform.position) > MaxRange;
@@ -66,8 +85,20 @@ namespace WpgGame.Combat
             }
         }
 
+        private void FixedUpdate()
+        {
+            // Kunci gerak fisika selama freeze (Update bisa kelewat satu step fisika).
+            if (!IsGameplayFrozen()) return;
+            if (_rb != null && _rb.linearVelocity != Vector2.zero)
+            {
+                _rb.linearVelocity = Vector2.zero;
+            }
+        }
+
         private void OnTriggerEnter2D(Collider2D other)
         {
+            // Freeze saat state bukan Playing: tidak memberi damage.
+            if (IsGameplayFrozen()) return;
             if (other == null) return;
 
             // Jangan hantam player atau proyektil lain.
@@ -82,6 +113,13 @@ namespace WpgGame.Combat
 
             health.TakeDamage(Damage);
             Destroy(gameObject);
+        }
+
+        private bool IsGameplayFrozen()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) return false;
+            return gm.State != GameManager.GameState.Playing;
         }
     }
 }
