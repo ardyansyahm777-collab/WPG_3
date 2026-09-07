@@ -33,7 +33,12 @@ namespace WpgGame.UI
                 return;
             }
 
-            var health = FindFirstObjectByType<HealthSystem>();
+            // HealthSystem dipakai player DAN enemy — wajib ambil dari player (tag Player),
+            // fallback ke instance pertama bila player belum ada.
+            var player = GameObject.FindGameObjectWithTag("Player");
+            var health = player != null
+                ? player.GetComponent<HealthSystem>()
+                : FindFirstObjectByType<HealthSystem>();
             var levels = FindFirstObjectByType<LevelUpSystem>();
             var gold = FindFirstObjectByType<GoldManager>();
 
