@@ -53,13 +53,16 @@ namespace WpgGame.UI
                 return;
             }
 
-            // Bersihkan container kecuali template.
+            // Bersihkan container kecuali template. Nonaktifkan dulu seketika
+            // (Destroy() baru efektif akhir frame; tanpa ini popup bertumpuk
+            // dalam satu frame saat beberapa level naik sekaligus).
             if (choicesContainer != null && choiceTemplate != null)
             {
                 foreach (Transform child in choicesContainer)
                 {
                     if (child.gameObject != choiceTemplate.gameObject)
                     {
+                        child.gameObject.SetActive(false);
                         Destroy(child.gameObject);
                     }
                 }

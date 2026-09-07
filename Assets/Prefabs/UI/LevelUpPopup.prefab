@@ -615,6 +615,7 @@ GameObject:
   - component: {fileID: 6174923060319749157}
   - component: {fileID: 1789386692167518103}
   - component: {fileID: 1171897547999797149}
+  - component: {fileID: 2660550124470146932}
   m_Layer: 0
   m_Name: ChoiceTemplate
   m_TagString: Untagged
@@ -725,3 +726,25 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &2660550124470146932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8479738612031669891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
+  m_IgnoreLayout: 0
+  m_MinWidth: 640
+  m_MinHeight: 150
+  m_PreferredWidth: 640
+  m_PreferredHeight: 150
+  m_FlexibleWidth: 0
+  m_FlexibleHeight: 0
+  m_LayoutPriority: 1
+  m_MaxWidth: -1
+  m_MaxHeight: -1
