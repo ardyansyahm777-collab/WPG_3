@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using WpgGame.Combat;
 using WpgGame.Core;
 using WpgGame.Enemy;
@@ -13,7 +14,10 @@ namespace WpgGame.Player
     /// </summary>
     public static class GameplaySetup
     {
+        private const string GameplaySceneName = "Main";
+
         private static GameObject _player;
+        private static HealthSystem _subscribedHealth;
         private static GameObject _enemyTemplate;
         private static GameObject _projectileTemplate;
 
@@ -47,6 +51,8 @@ namespace WpgGame.Player
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureGameplay()
         {
+            if (SceneManager.GetActiveScene().name != GameplaySceneName) return;
+
             var player = GetOrCreatePlayer();
 
             var spawner = Object.FindFirstObjectByType<EnemySpawner>();
@@ -67,7 +73,22 @@ namespace WpgGame.Player
                 var existing = Object.FindFirstObjectByType<PlayerController>();
                 _player = existing != null ? existing.gameObject : CreatePlayer();
             }
+            EnsurePlayerDeathSubscription(_player);
             return _player;
+        }
+
+        private static void EnsurePlayerDeathSubscription(GameObject player)
+        {
+            if (player == null) return;
+            var health = player.GetComponent<HealthSystem>();
+            if (health == null) return;
+            if (_subscribedHealth == health) return;
+            if (_subscribedHealth != null)
+            {
+                _subscribedHealth.OnDeath -= HandleSubscribedPlayerDeath;
+            }
+            health.OnDeath += HandleSubscribedPlayerDeath;
+            _subscribedHealth = health;
         }
 
         public static GameObject GetOrCreateEnemyTemplate()
@@ -113,7 +134,6 @@ namespace WpgGame.Player
 
             var health = go.GetComponent<HealthSystem>();
             health.MaxHP = 3f;
-            health.OnDeath += () => HandlePlayerDeath(go, health);
 
             var stats = go.GetComponent<PlayerStats>();
             stats.MoveSpeed = 5f;
@@ -193,6 +213,11 @@ namespace WpgGame.Player
 
             go.SetActive(false);
             return go;
+        }
+
+        private static void HandleSubscribedPlayerDeath()
+        {
+            HandlePlayerDeath(_player, _subscribedHealth);
         }
 
         private static void HandlePlayerDeath(GameObject player, HealthSystem health)
