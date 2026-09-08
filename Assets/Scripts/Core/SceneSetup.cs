@@ -10,7 +10,29 @@ namespace WpgGame.Core
     [DefaultExecutionOrder(-2000)]
     public class SceneSetup : MonoBehaviour
     {
+        private static bool _sceneHookInstalled;
+
+        // RIM AfterSceneLoad hanya dijamin jalan sekali saat startup (TIDAK tiap
+        // LoadScene runtime). Hook sceneLoaded agar tiap scene dipastikan punya
+        // GameManager/EventSystem/Camera (mis. alur Main Menu -> Main).
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void Init()
+        {
+            if (!_sceneHookInstalled)
+            {
+                UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+                _sceneHookInstalled = true;
+            }
+            Bootstrap();
+        }
+
+        private static void OnSceneLoaded(
+            UnityEngine.SceneManagement.Scene scene,
+            UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            Bootstrap();
+        }
+
         private static void Bootstrap()
         {
             EnsureGameManager();

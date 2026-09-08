@@ -48,10 +48,28 @@ namespace WpgGame.Player
         }
 #endif
 
+        private static bool _sceneHookInstalled;
+
+        // RIM AfterSceneLoad hanya dijamin jalan sekali saat startup (TIDAK tiap
+        // LoadScene saat runtime — itu penyebab game-over hilang di alur Main Menu
+        // -> Main). Karena itu hook ke SceneManager.sceneLoaded untuk kerja per-scene.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void EnsureGameplay()
+        private static void Init()
         {
-            if (SceneManager.GetActiveScene().name != GameplaySceneName) return;
+            if (!_sceneHookInstalled)
+            {
+                SceneManager.sceneLoaded += OnSceneLoaded;
+                _sceneHookInstalled = true;
+            }
+            var active = SceneManager.GetActiveScene();
+            if (active.IsValid()) OnSceneLoaded(active, LoadSceneMode.Single);
+        }
+
+        private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // Pakai nama scene yang DI-LOAD (bukan GetActiveScene) agar benar
+            // walau callback datang saat transisi.
+            if (scene.name != GameplaySceneName) return;
 
             var player = GetOrCreatePlayer();
 
