@@ -94,18 +94,24 @@ namespace WpgGame.UI
             }
 
             var center = FindOrCreate(showcasePanel.transform, "Center", typeof(RectTransform));
-            AnchorCenter(center.GetComponent<RectTransform>(), new Vector2(520f, 800f), new Vector2(-80f, 0f));
+            AnchorCenter(center.GetComponent<RectTransform>(), new Vector2(520f, 800f), new Vector2(-100f, 0f));
+            EnforceCenterLayout(center);
             var portrait = AddText(center.transform, "HeroPortraitText", "AE", 150,
                 new Color(0.95f, 0.91f, 0.82f, 1f));
+            EnsureMinHeight(portrait.gameObject, 180f);
             var heroName = AddText(center.transform, "HeroNameText", "Aelindra", 64,
                 new Color(0.95f, 0.91f, 0.82f, 1f));
+            EnsureMinHeight(heroName.gameObject, 95f);
             var heroRole = AddText(center.transform, "HeroRoleText", "Swift Archer", 36,
                 new Color(0.75f, 0.75f, 0.75f, 1f));
+            EnsureMinHeight(heroRole.gameObject, 60f);
             var selectBtn = FindOrCloneButton(center.transform, playBtn, "SelectPlayButton", "SELECT & PLAY");
+            EnsureMinHeight(selectBtn, 95f);
             var gantiBtn = FindOrCloneButton(center.transform, playBtn, "GantiButton", "GANTI HERO");
+            EnsureMinHeight(gantiBtn, 95f);
 
             var scroll = FindOrCreate(showcasePanel.transform, "DetailScroll", typeof(RectTransform), typeof(ScrollRect));
-            AnchorRight(scroll.GetComponent<RectTransform>(), 460f);
+            AnchorRight(scroll.GetComponent<RectTransform>(), 520f);
             var scrollRect = scroll.GetComponent<ScrollRect>();
             var viewport = FindOrCreate(scroll.transform, "Viewport", typeof(RectTransform), typeof(Image), typeof(Mask));
             var vpImg = viewport.GetComponent<Image>();
@@ -191,25 +197,36 @@ namespace WpgGame.UI
         [MenuItem("Tools/WPG_3/Fix Center Layout")]
         public static void FixCenterLayout()
         {
-            var center = GameObject.Find("MenuUI/ShowcasePanel/Center");
-            if (center == null)
+            var ui = GameObject.Find("MenuUI");
+            var centerT = ui != null ? ui.transform.Find("ShowcasePanel/Center") : null;
+            if (centerT == null)
             {
                 Debug.LogError("[CharSelect] Center tidak ditemukan.");
                 return;
             }
 
+            var center = centerT.gameObject;
+            EnforceCenterLayout(center);
+
+            EditorSceneManager.MarkAllScenesDirty();
+            Debug.Log("[CharSelect] Center layout diperbaiki.");
+        }
+
+        private static void EnforceCenterLayout(GameObject center)
+        {
             var layout = center.GetComponent<VerticalLayoutGroup>();
             if (layout == null)
             {
                 layout = center.AddComponent<VerticalLayoutGroup>();
             }
 
-            layout.spacing = 12f;
+            layout.spacing = 16f;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = false;
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
+            layout.padding = new RectOffset(0, 0, 10, 10);
 
             var fitter = center.GetComponent<ContentSizeFitter>();
             if (fitter == null)
@@ -218,9 +235,22 @@ namespace WpgGame.UI
             }
 
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        }
 
-            EditorSceneManager.MarkAllScenesDirty();
-            Debug.Log("[CharSelect] Center layout diperbaiki.");
+        private static void EnsureMinHeight(GameObject go, float minHeight)
+        {
+            if (go == null)
+            {
+                return;
+            }
+
+            var layout = go.GetComponent<LayoutElement>();
+            if (layout == null)
+            {
+                layout = go.AddComponent<LayoutElement>();
+            }
+
+            layout.minHeight = Mathf.Max(layout.minHeight, minHeight);
         }
 
         [MenuItem("Tools/WPG_3/Validate Slice")]

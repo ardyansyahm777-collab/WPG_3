@@ -720,16 +720,29 @@ namespace WpgGame.UI
                 return;
             }
 
+            // Baris 2 kolom: judul (flex) + nilai (tetap 170px, rata kanan).
+            // HorizontalLayoutGroup agar judul panjang tidak mendorong nilai keluar layar.
             GameObject go = new GameObject("Row_" + title, typeof(RectTransform));
             go.transform.SetParent(detailContent, false);
 
-            TMP_Text tmp = go.AddComponent<TextMeshProUGUI>();
-            tmp.text = title + ": " + value;
-            tmp.fontSize = 30;
-            tmp.textWrappingMode = TextWrappingModes.Normal;
-            tmp.raycastTarget = false;
+            var hlg = go.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 12f;
+            hlg.childAlignment = TextAnchor.MiddleLeft;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = true;
+            hlg.padding = new RectOffset(8, 8, 4, 4);
 
-            EnsureTouchHeight(go);
+            TMP_Text titleTmp = CreateCell(go, "Title", title, 26, TextAlignmentOptions.Left);
+            var titleLayout = titleTmp.gameObject.AddComponent<LayoutElement>();
+            titleLayout.flexibleWidth = 1f;
+
+            TMP_Text valueTmp = CreateCell(go, "Value", value, 26, TextAlignmentOptions.Right);
+            var valueLayout = valueTmp.gameObject.AddComponent<LayoutElement>();
+            valueLayout.minWidth = 170f;
+
+            EnsureTouchHeight(go, 56f);
         }
 
         private void AddParagraph(string title, string body)
@@ -763,17 +776,39 @@ namespace WpgGame.UI
             GameObject go = new GameObject("Row_" + title, typeof(RectTransform));
             go.transform.SetParent(detailContent, false);
 
-            TMP_Text tmp = go.AddComponent<TextMeshProUGUI>();
-            tmp.text = "<b>" + title + "</b>\n" + body;
-            tmp.fontSize = 30;
-            tmp.textWrappingMode = TextWrappingModes.Normal;
-            tmp.richText = true;
-            tmp.raycastTarget = false;
+            // Paragraf vertikal: judul tebal + isi wrapping.
+            var vlg = go.AddComponent<VerticalLayoutGroup>();
+            vlg.spacing = 4f;
+            vlg.childAlignment = TextAnchor.UpperLeft;
+            vlg.childControlWidth = true;
+            vlg.childControlHeight = false;
+            vlg.childForceExpandWidth = true;
+            vlg.childForceExpandHeight = false;
+            vlg.padding = new RectOffset(8, 8, 6, 6);
 
-            EnsureTouchHeight(go);
+            TMP_Text titleTmp = CreateCell(go, "Title", "<b>" + title + "</b>", 30, TextAlignmentOptions.Left);
+            titleTmp.richText = true;
+            TMP_Text bodyTmp = CreateCell(go, "Body", body, 26, TextAlignmentOptions.Left);
+
+            EnsureTouchHeight(go, 72f);
         }
 
-        private static void EnsureTouchHeight(GameObject row)
+        /// <summary>Sel TMP non-raycast dengan wrapping kata normal.</summary>
+        private static TMP_Text CreateCell(GameObject parent, string name, string text, int size, TextAlignmentOptions align)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent.transform, false);
+
+            TMP_Text tmp = go.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = size;
+            tmp.alignment = align;
+            tmp.textWrappingMode = TextWrappingModes.Normal;
+            tmp.raycastTarget = false;
+            return tmp;
+        }
+
+        private static void EnsureTouchHeight(GameObject row, float minHeight = 72f)
         {
             if (row == null)
             {
@@ -786,9 +821,9 @@ namespace WpgGame.UI
                 layout = row.AddComponent<LayoutElement>();
             }
 
-            if (layout.minHeight < 64f)
+            if (layout.minHeight < minHeight)
             {
-                layout.minHeight = 72f;
+                layout.minHeight = minHeight;
             }
         }
     }
