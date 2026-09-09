@@ -282,8 +282,10 @@ namespace WpgGame.UI
 
         public void RenderCards()
         {
-            if (cardGrid == null || cardPrefab == null || heroes == null)
+            if (cardGrid == null || cardPrefab == null || heroes == null || heroes.Length == 0)
             {
+                Debug.LogError("[CharSelect] RenderCards batal: cardGrid/cardPrefab/heroes belum di-wire di Inspector.",
+                    this);
                 return;
             }
 
