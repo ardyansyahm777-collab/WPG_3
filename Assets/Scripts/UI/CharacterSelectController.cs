@@ -379,7 +379,7 @@ namespace WpgGame.UI
                 AddRow("Pemulihan Diterima", hero.IncomingHeal.ToString("0.##") + "%");
                 if (!hero.IsUnlocked)
                 {
-                    AddParagraph("Status", "LOCKED — pilih hero lain atau buka kuncinya. SELECT&PLAY ditolak.");
+                    AddParagraph("Status", "LOCKED: pilih hero lain atau buka kuncinya.", 120f);
                 }
             }
             else if (activeTab == (int)HeroTab.Skill)
@@ -392,7 +392,7 @@ namespace WpgGame.UI
             {
                 string pasifTitle = string.IsNullOrEmpty(hero.Passive.Name) ? "Pasif" : hero.Passive.Name;
                 string pasifBody = string.IsNullOrEmpty(hero.Passive.Desc) ? "-" : hero.Passive.Desc;
-                AddParagraph(pasifTitle, pasifBody);
+                AddParagraph(pasifTitle, pasifBody, 180f);
             }
 
             RefreshTabs();
@@ -579,7 +579,7 @@ namespace WpgGame.UI
             string title = "[Tombol " + slot + "] " + (string.IsNullOrEmpty(name) ? "Skill " + slot : name);
             string body = (string.IsNullOrEmpty(desc) ? "-" : desc)
                 + "\nCooldown: " + cooldown.ToString("0.##") + "s";
-            AddParagraph(title, body);
+            AddParagraph(title, body, 240f);
         }
 
         private void RefreshTabs()
@@ -722,32 +722,16 @@ namespace WpgGame.UI
                 return;
             }
 
-            // Baris 2 kolom: judul (flex) + nilai (tetap 170px, rata kanan).
-            // HorizontalLayoutGroup agar judul panjang tidak mendorong nilai keluar layar.
+            // Baris 1 kolom fixed-height: judul + nilai sebaris, tanpa nested layout
+            // (anti-fragile terhadap preferred-size TMP).
             GameObject go = new GameObject("Row_" + title, typeof(RectTransform));
             go.transform.SetParent(detailContent, false);
 
-            var hlg = go.AddComponent<HorizontalLayoutGroup>();
-            hlg.spacing = 12f;
-            hlg.childAlignment = TextAnchor.MiddleLeft;
-            hlg.childControlWidth = true;
-            hlg.childControlHeight = true;
-            hlg.childForceExpandWidth = true;
-            hlg.childForceExpandHeight = true;
-            hlg.padding = new RectOffset(8, 8, 4, 4);
-
-            TMP_Text titleTmp = CreateCell(go, "Title", title, 26, TextAlignmentOptions.Left);
-            var titleLayout = titleTmp.gameObject.AddComponent<LayoutElement>();
-            titleLayout.flexibleWidth = 1f;
-
-            TMP_Text valueTmp = CreateCell(go, "Value", value, 26, TextAlignmentOptions.Right);
-            var valueLayout = valueTmp.gameObject.AddComponent<LayoutElement>();
-            valueLayout.minWidth = 170f;
-
-            EnsureTouchHeight(go, 56f);
+            TMP_Text tmp = StretchText(go, title + ": " + value, 24, TextAlignmentOptions.Left);
+            FixRowHeight(go, 56f);
         }
 
-        private void AddParagraph(string title, string body)
+        private void AddParagraph(string title, string body, float bodyHeight)
         {
             if (detailContent == null)
             {
@@ -778,21 +762,56 @@ namespace WpgGame.UI
             GameObject go = new GameObject("Row_" + title, typeof(RectTransform));
             go.transform.SetParent(detailContent, false);
 
-            // Paragraf vertikal: judul tebal + isi wrapping.
-            var vlg = go.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 4f;
-            vlg.childAlignment = TextAnchor.UpperLeft;
-            vlg.childControlWidth = true;
-            vlg.childControlHeight = false;
-            vlg.childForceExpandWidth = true;
-            vlg.childForceExpandHeight = false;
-            vlg.padding = new RectOffset(8, 8, 6, 6);
+            // Satu TMP full-rect fixed-height: judul tebal + isi. Tinggi dikunci agar
+            // tidak bergantung preferred-size (lihat FixRowHeight).
+            TMP_Text tmp = StretchText(go, "<b>" + title + "</b>\n" + body, 24, TextAlignmentOptions.TopLeft);
+            tmp.richText = true;
+            FixRowHeight(go, bodyHeight);
+        }
 
-            TMP_Text titleTmp = CreateCell(go, "Title", "<b>" + title + "</b>", 30, TextAlignmentOptions.Left);
-            titleTmp.richText = true;
-            TMP_Text bodyTmp = CreateCell(go, "Body", body, 26, TextAlignmentOptions.Left);
+        /// <summary>
+        /// TMP full-stretch di dalam baris + overflow Ellipsis (tak pernah overlap).
+        /// </summary>
+        private static TMP_Text StretchText(GameObject row, string text, int size, TextAlignmentOptions align)
+        {
+            GameObject go = new GameObject("Text", typeof(RectTransform));
+            go.transform.SetParent(row.transform, false);
 
-            EnsureTouchHeight(go, 72f);
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = new Vector2(8f, 6f);
+            rt.offsetMax = new Vector2(-8f, -6f);
+
+            TMP_Text tmp = go.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = size;
+            tmp.alignment = align;
+            tmp.textWrappingMode = TextWrappingModes.Normal;
+            tmp.overflowMode = TextOverflowModes.Ellipsis;
+            tmp.raycastTarget = false;
+            return tmp;
+        }
+
+        /// <summary>
+        /// Kunci tinggi baris (min + preferred sama) sehingga parent VerticalLayoutGroup
+        /// menumpuk deterministik tanpa menunggu preferred-size TMP.
+        /// </summary>
+        private static void FixRowHeight(GameObject row, float height)
+        {
+            if (row == null)
+            {
+                return;
+            }
+
+            var layout = row.GetComponent<LayoutElement>();
+            if (layout == null)
+            {
+                layout = row.AddComponent<LayoutElement>();
+            }
+
+            layout.minHeight = height;
+            layout.preferredHeight = height;
         }
 
         /// <summary>Sel TMP non-raycast dengan wrapping kata normal.</summary>
