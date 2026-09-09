@@ -125,6 +125,13 @@ namespace WpgGame.UI
             var vlg = GetOrAdd<VerticalLayoutGroup>(content);
             vlg.spacing = 8f;
             vlg.padding = new RectOffset(12, 12, 12, 12);
+            // WAJIB eksplisit: default VLG tidak menjamin control flags —
+            // tanpa ini baris runtime (RectTransform 0x0) collapse jadi strip.
+            vlg.childAlignment = TextAnchor.UpperLeft;
+            vlg.childControlWidth = true;
+            vlg.childControlHeight = false;
+            vlg.childForceExpandWidth = true;
+            vlg.childForceExpandHeight = false;
             var fitter = GetOrAdd<ContentSizeFitter>(content);
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             scrollRect.viewport = vpRt;

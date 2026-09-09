@@ -732,7 +732,7 @@ namespace WpgGame.UI
             hlg.childAlignment = TextAnchor.MiddleLeft;
             hlg.childControlWidth = true;
             hlg.childControlHeight = true;
-            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandWidth = true;
             hlg.childForceExpandHeight = true;
             hlg.padding = new RectOffset(8, 8, 4, 4);
 
