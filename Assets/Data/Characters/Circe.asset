@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4a51e2bd7f048f9a3d6c1e5f7082946, type: 3}
+  m_Name: Circe
+  m_EditorClassIdentifier:
+  Id: circe
+  DisplayName: Circe
+  Role: Ember Mage
+  PortraitText: CI
+  IsUnlocked: 0
+  Price: 800
+  HP: 1200
+  PhysicalAttack: 85
+  PhysicalDefense: 40
+  AttackSpeed: 1.1
+  CritChance: 10
+  Mana: 300
+  MagicPower: 0
+  MagicalDefense: 35
+  CooldownReduction: 0
+  MovementSpeed: 5
+  HPRegen: 8
+  PhysicalPEN: 0
+  Lifesteal: 0
+  BasicAttackRange: 5.5
+  CritDamage: 200
+  HealEffect: 100
+  ManaRegen: 5
+  MagicalPEN: 0
+  SpellVamp: 0
+  IncomingHeal: 100
+  Skill1:
+    Name: Meteor
+    Desc: Burn area 3 detik. Damage +50% selama 3 detik. [Tombol 1]
+    Cooldown: 8
+    Value: 1.5
+  Skill2:
+    Name: Arcane Split
+    Desc: MultiShot +1 selama 5 detik. [Tombol 2]
+    Cooldown: 12
+    Value: 1
+  Skill3:
+    Name: Moon Ritual
+    Desc: Memulihkan 300 HP seketika. [Tombol 3]
+    Cooldown: 20
+    Value: 300
+  Passive:
+    Name: Mana Surge
+    Desc: +15% Damage permanen.
+    Value: 15

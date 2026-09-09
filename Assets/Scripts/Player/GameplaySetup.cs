@@ -50,6 +50,14 @@ namespace WpgGame.Player
 
         private static bool _sceneHookInstalled;
 
+        /// <summary>
+        /// Hero yang dipilih di Main Menu (di-set CharacterSelectController sebelum LoadScene).
+        /// Dibaca sekali saat scene Main dimuat; null = pakai default Aelindra.
+        /// Sengaja statis (bukan PlayerPrefs) agar referensi CharacterData langsung terbawa
+        /// antar scene dalam satu sesi tanpa butuh folder Resources.
+        /// </summary>
+        public static CharacterData PendingCharacter { get; set; }
+
         // RIM AfterSceneLoad hanya dijamin jalan sekali saat startup (TIDAK tiap
         // LoadScene saat runtime — itu penyebab game-over hilang di alur Main Menu
         // -> Main). Karena itu hook ke SceneManager.sceneLoaded untuk kerja per-scene.
@@ -72,6 +80,7 @@ namespace WpgGame.Player
             if (scene.name != GameplaySceneName) return;
 
             var player = GetOrCreatePlayer();
+            ApplyPendingHero(player);
 
             var spawner = Object.FindFirstObjectByType<EnemySpawner>();
             if (spawner == null)
@@ -92,7 +101,31 @@ namespace WpgGame.Player
                 _player = existing != null ? existing.gameObject : CreatePlayer();
             }
             EnsurePlayerDeathSubscription(_player);
+            EnsureHeroSkill(_player);
             return _player;
+        }
+
+        /// <summary>
+        /// Terapkan PendingCharacter (dari Character Select) ke Player:
+        /// ApplyCharacter + set HeroSkill.Character. Dipanggil tiap scene Main dimuat
+        /// (PendingCharacter dipertahankan agar Restart tetap pakai hero yang sama).
+        /// </summary>
+        private static void ApplyPendingHero(GameObject player)
+        {
+            if (player == null || PendingCharacter == null) return;
+            var stats = player.GetComponent<PlayerStats>();
+            if (stats != null) stats.ApplyCharacter(PendingCharacter);
+            var skill = player.GetComponent<HeroSkill>();
+            if (skill != null) skill.Character = PendingCharacter;
+        }
+
+        private static void EnsureHeroSkill(GameObject player)
+        {
+            if (player == null) return;
+            if (player.GetComponent<HeroSkill>() == null)
+            {
+                player.AddComponent<HeroSkill>();
+            }
         }
 
         private static void EnsurePlayerDeathSubscription(GameObject player)
@@ -129,6 +162,7 @@ namespace WpgGame.Player
                 typeof(HealthSystem),
                 typeof(PlayerStats),
                 typeof(PlayerController),
+                typeof(HeroSkill),
                 typeof(AutoAimShooter));
 
             go.layer = ResolveLayer("PG_Player");

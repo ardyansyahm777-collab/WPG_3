@@ -61,58 +61,84 @@ namespace WpgGame.Player
         private bool _skill1Active;
         private bool _skill2Active;
 
+        private InputAction _skill1;
+        private InputAction _skill2;
+        private InputAction _skill3;
+        private bool _ownSkill1;
+        private bool _ownSkill2;
+        private bool _ownSkill3;
+
         private void Awake()
         {
             _stats = GetComponent<PlayerStats>();
             _health = GetComponent<HealthSystem>();
 
-#if UNITY_EDITOR
-            // Fallback editor: ambil referensi langsung dari asset bawaan agar Play mode
-            // langsung jalan tanpa wiring manual (pola yang sama seperti PlayerController).
-            if (skill1Action == null) skill1Action = LoadSkillAction("Player/Skill1");
-            if (skill2Action == null) skill2Action = LoadSkillAction("Player/Skill2");
-            if (skill3Action == null) skill3Action = LoadSkillAction("Player/Skill3");
-#endif
+            _skill1 = ResolveAction(skill1Action, "Player/Skill1", "Skill1", "<Keyboard>/1", out _ownSkill1);
+            _skill2 = ResolveAction(skill2Action, "Player/Skill2", "Skill2", "<Keyboard>/2", out _ownSkill2);
+            _skill3 = ResolveAction(skill3Action, "Player/Skill3", "Skill3", "<Keyboard>/3", out _ownSkill3);
         }
 
-#if UNITY_EDITOR
-        private static InputActionReference LoadSkillAction(string actionPath)
+        /// <summary>
+        /// Prioritas resolusi aksi: inspector -&gt; asset bawaan (editor) -&gt; InputAction
+        /// runtime (agar skill tetap jalan di build tanpa wiring manual).
+        /// </summary>
+        private static InputAction ResolveAction(
+            InputActionReference actionRef, string assetPath, string actionName, string binding,
+            out bool owned)
         {
+            owned = false;
+            if (actionRef != null)
+            {
+                return actionRef.action;
+            }
+
+#if UNITY_EDITOR
             var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<InputActionAsset>(
                 "Assets/Settings/InputSystem_Actions.inputactions");
-            var action = asset != null ? asset.FindAction(actionPath, false) : null;
-            return action != null ? InputActionReference.Create(action) : null;
-        }
+            var found = asset != null ? asset.FindAction(assetPath, false) : null;
+            if (found != null)
+            {
+                return found;
+            }
 #endif
+            var created = new InputAction(actionName, InputActionType.Button, binding);
+            created.Enable();
+            owned = true;
+            return created;
+        }
 
         private void OnEnable()
         {
-            Subscribe(skill1Action, HandleSkill1Performed);
-            Subscribe(skill2Action, HandleSkill2Performed);
-            Subscribe(skill3Action, HandleSkill3Performed);
+            Subscribe(_skill1, HandleSkill1Performed);
+            Subscribe(_skill2, HandleSkill2Performed);
+            Subscribe(_skill3, HandleSkill3Performed);
         }
 
         private void OnDisable()
         {
-            Unsubscribe(skill1Action, HandleSkill1Performed);
-            Unsubscribe(skill2Action, HandleSkill2Performed);
-            Unsubscribe(skill3Action, HandleSkill3Performed);
+            Unsubscribe(_skill1, HandleSkill1Performed, _ownSkill1);
+            Unsubscribe(_skill2, HandleSkill2Performed, _ownSkill2);
+            Unsubscribe(_skill3, HandleSkill3Performed, _ownSkill3);
 
             CancelBuffs();
         }
 
-        private static void Subscribe(InputActionReference actionRef, Action<InputAction.CallbackContext> handler)
+        private static void Subscribe(InputAction action, Action<InputAction.CallbackContext> handler)
         {
-            if (actionRef == null) return;
-            actionRef.action.Enable();
-            actionRef.action.performed += handler;
+            if (action == null) return;
+            action.Enable();
+            action.performed += handler;
         }
 
-        private static void Unsubscribe(InputActionReference actionRef, Action<InputAction.CallbackContext> handler)
+        private static void Unsubscribe(InputAction action, Action<InputAction.CallbackContext> handler, bool owned)
         {
-            if (actionRef == null) return;
-            actionRef.action.performed -= handler;
-            // Jangan Disable: action asset dipakai bersama antar komponen.
+            if (action == null) return;
+            action.performed -= handler;
+            // Jangan Disable action milik asset bersama; hanya dispose yang kita buat sendiri.
+            if (owned)
+            {
+                action.Disable();
+            }
         }
 
         private void HandleSkill1Performed(InputAction.CallbackContext ctx) { TryCast(0); }
