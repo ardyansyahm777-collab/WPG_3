@@ -154,8 +154,8 @@ namespace WpgGame.Player
 
             var stats = go.GetComponent<PlayerStats>();
             stats.MoveSpeed = 5f;
-            stats.FireRate = 3f;
-            stats.Damage = 1f;
+            stats.FireRate = 1.1f;
+            stats.Damage = 85f;
             stats.MultiShot = 1;
 
             return go;
