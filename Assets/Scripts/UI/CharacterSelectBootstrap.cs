@@ -37,6 +37,12 @@ namespace WpgGame.UI
         private const string FableMuted = "#94A3B8";
         private const string FableDanger = "#EF4444";
 
+        // Prefab template baris detail (WYSIWYG di Project, dipakai runtime).
+        // Isi DetailContent di hierarchy SELALU kosong di edit-mode — baris lahir
+        // dari kode + prefab ini, jadi jangan edit anak DetailContent manual.
+        private const string StatRowPrefabPath = "Assets/Prefabs/UI/StatRow.prefab";
+        private const string ParaRowPrefabPath = "Assets/Prefabs/UI/ParaRow.prefab";
+
         private static Color Hex(string html)
         {
             Color c;
@@ -241,7 +247,10 @@ namespace WpgGame.UI
             SetObj(so, "heroPortraitImage", (Object)null);
             SetObj(so, "heroPortraitFallbackText", portrait);
             SetObj(so, "detailContent", content.transform);
-            SetObj(so, "statRowPrefab", (Object)null);
+            var statRow = EnsureRowPrefab(StatRowPrefabPath, "StatRow", 56f, false);
+            var paraRow = EnsureRowPrefab(ParaRowPrefabPath, "ParaRow", 240f, true);
+            SetObj(so, "statRowPrefab", statRow);
+            SetObj(so, "paraRowPrefab", paraRow);
             SetObj(so, "selectPlayButton", selectBtn.GetComponent<Button>());
             SetObj(so, "gantiButton", gantiBtn.GetComponent<Button>());
             SetObj(so, "backButton", backBtn.GetComponent<Button>());
@@ -601,6 +610,132 @@ namespace WpgGame.UI
 
             layout.minHeight = height;
             layout.preferredHeight = height;
+        }
+
+        /// <summary>
+        /// Pastikan prefab template baris ada di Project (buat bila hilang).
+        /// ADDITIVE: struktur yang hilang dilengkapi, nilai styling yang sudah ada
+        /// TIDAK PERNAH ditimpa — jadi aman di-run ulang setelah user mengedit
+        /// prefab secara visual. Kembalikan aset prefab untuk di-wire ke controller.
+        /// </summary>
+        private static GameObject EnsureRowPrefab(string path, string rootName, float height, bool paragraph)
+        {
+            EnsureFolder("Assets/Prefabs");
+            EnsureFolder("Assets/Prefabs/UI");
+
+            GameObject temp;
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (existing != null)
+            {
+                temp = (GameObject)PrefabUtility.InstantiatePrefab(existing);
+            }
+            else
+            {
+                temp = new GameObject(rootName, typeof(RectTransform));
+            }
+
+            temp.name = rootName;
+
+            var layout = temp.GetComponent<LayoutElement>();
+            if (layout == null)
+            {
+                layout = temp.AddComponent<LayoutElement>();
+            }
+
+            if (layout.minHeight <= 0f && layout.preferredHeight <= 0f)
+            {
+                layout.minHeight = height;
+                layout.preferredHeight = height;
+            }
+
+            if (paragraph)
+            {
+                EnsureRowText(temp.transform, "Title", Hex(FableAccent), 24, FontStyles.Bold,
+                    TextAlignmentOptions.TopLeft,
+                    new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f),
+                    Vector2.zero, new Vector2(0f, 52f));
+                EnsureRowText(temp.transform, "Body", Hex(FableText), 24, FontStyles.Normal,
+                    TextAlignmentOptions.TopLeft,
+                    Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f),
+                    Vector2.zero, new Vector2(0f, -56f));
+            }
+            else
+            {
+                EnsureRowText(temp.transform, "Title", Hex(FableMuted), 24, FontStyles.Normal,
+                    TextAlignmentOptions.Left,
+                    Vector2.zero, new Vector2(0.55f, 1f), new Vector2(0f, 0.5f),
+                    Vector2.zero, Vector2.zero);
+                EnsureRowText(temp.transform, "Value", Hex(FableText), 24, FontStyles.Bold,
+                    TextAlignmentOptions.Right,
+                    new Vector2(0.55f, 0f), Vector2.one, new Vector2(1f, 0.5f),
+                    Vector2.zero, Vector2.zero);
+            }
+
+            var saved = PrefabUtility.SaveAsPrefabAsset(temp, path);
+            UnityEngine.Object.DestroyImmediate(temp);
+            if (saved == null)
+            {
+                Debug.LogError("[CharSelect] Gagal menyimpan prefab: " + path);
+            }
+
+            return saved;
+        }
+
+        /// <summary>
+        /// Pastikan anak TMP ada di root prefab. Hanya TMP yang BARU dibuat yang
+        /// diberi style + rect; yang sudah ada dibiarkan (styling milik user).
+        /// </summary>
+        private static void EnsureRowText(Transform parent, string name, Color color, int size,
+            FontStyles style, TextAlignmentOptions align,
+            Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot,
+            Vector2 anchoredPos, Vector2 sizeDelta)
+        {
+            var t = parent.Find(name);
+            GameObject go = t != null ? t.gameObject : new GameObject(name, typeof(RectTransform));
+            if (t == null)
+            {
+                go.transform.SetParent(parent, false);
+            }
+
+            var rt = go.GetComponent<RectTransform>();
+            var tmp = go.GetComponent<TextMeshProUGUI>();
+            if (tmp == null)
+            {
+                tmp = go.AddComponent<TextMeshProUGUI>();
+            }
+            else
+            {
+                return;
+            }
+
+            rt.anchorMin = anchorMin;
+            rt.anchorMax = anchorMax;
+            rt.pivot = pivot;
+            rt.anchoredPosition = anchoredPos;
+            rt.sizeDelta = sizeDelta;
+
+            tmp.color = color;
+            tmp.fontSize = size;
+            tmp.fontStyle = style;
+            tmp.alignment = align;
+            tmp.textWrappingMode = TextWrappingModes.Normal;
+            tmp.overflowMode = TextOverflowModes.Ellipsis;
+            tmp.raycastTarget = false;
+            tmp.margin = new Vector4(12f, 4f, 12f, 4f);
+        }
+
+        private static void EnsureFolder(string path)
+        {
+            if (AssetDatabase.IsValidFolder(path))
+            {
+                return;
+            }
+
+            int slash = path.LastIndexOf('/');
+            string parent = slash > 0 ? path.Substring(0, slash) : "Assets";
+            string name = slash > 0 ? path.Substring(slash + 1) : path;
+            EnsureFolder(parent);
+            AssetDatabase.CreateFolder(parent, name);
         }
 
         [MenuItem("Tools/WPG_3/Validate Slice")]

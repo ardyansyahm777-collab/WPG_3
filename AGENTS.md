@@ -67,6 +67,10 @@ Standalone, landscape 16:9. Scene: `Main Menu.unity` (pilih hero) +
   `childControlWidth/Height`, `childForceExpandWidth/Height`.
 - Baris list runtime: tinggi dikunci (`LayoutElement` min+preferred sama),
   satu TMP full-stretch + `Ellipsis`, tanpa nested layout group.
+- Isi `DetailContent`/grid di hierarchy SELALU kosong di edit-mode (spawn
+  runtime, musnah saat stop play) — JANGAN edit manual di play mode. Style
+  baris lewat prefab `Assets/Prefabs/UI/` (`StatRow`/`ParaRow`); bootstrap
+  hanya melengkapi struktur prefab, tak menimpa styling yang sudah ada.
 - Tooling validasi: `Tools/WPG_3/Validate Slice` → `[SliceCheck] ... PASS`;
   scene disimpan bersih (panel nonaktif, tanpa sisa objek runtime).
 

@@ -54,7 +54,11 @@ namespace WpgGame.UI
 
         [Header("Showcase Right (ScrollRect Content)")]
         [SerializeField] private Transform detailContent;
+        [Tooltip("Template baris stat (prefab aset, edit visual di Project bukan di hierarchy play-mode).")]
         [SerializeField] private GameObject statRowPrefab;
+
+        [Tooltip("Template baris paragraf skill/pasif. Boleh kosong -> pakai StatRow.")]
+        [SerializeField] private GameObject paraRowPrefab;
 
         [Header("Actions (touch 64-96px, assign di scene)")]
         [SerializeField] private Button selectPlayButton;
@@ -729,7 +733,8 @@ namespace WpgGame.UI
                     texts[0].text = title + ": " + value;
                 }
 
-                EnsureTouchHeight(row);
+                // Tinggi prefab dijaga 56 (identik jalur kode) agar tampilan tak berubah.
+                EnsureTouchHeight(row, 56f);
                 return;
             }
 
@@ -752,9 +757,11 @@ namespace WpgGame.UI
                 return;
             }
 
-            if (statRowPrefab != null)
+            // Prefab paragraf diutamakan; fallback ke StatRow lalu jalur kode.
+            GameObject proto = paraRowPrefab != null ? paraRowPrefab : statRowPrefab;
+            if (proto != null)
             {
-                GameObject row = Instantiate(statRowPrefab, detailContent);
+                GameObject row = Instantiate(proto, detailContent);
                 row.SetActive(true);
                 row.name = "Row_" + title;
 
