@@ -266,7 +266,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 912ef1ec370c0bc418840129d9e1e785, type: 3}
   m_Name: 
   m_EditorClassIdentifier: WPG_3.Scripts::WpgGame.Combat.HealthSystem
-  MaxHP: 3
+  MaxHP: 100
 --- !u!114 &3091591021744576324
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -281,8 +281,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: WPG_3.Scripts::WpgGame.Player.PlayerStats
   MoveSpeed: 5
   FireRate: 3
-  Damage: 0.3
+  Damage: 1
   MultiShot: 1
+  PhysicalDefense: 40
+  CritChance: 10
+  Mana: 300
+  MagicPower: 0
+  MagicalDefense: 35
+  CooldownReduction: 0
+  HPRegen: 8
+  PhysicalPEN: 0
+  Lifesteal: 0
+  BasicAttackRange: 5.5
+  CritDamage: 200
+  HealEffect: 100
+  ManaRegen: 5
+  MagicalPEN: 0
+  SpellVamp: 0
+  IncomingHeal: 100
 --- !u!114 &7373932797856383898
 MonoBehaviour:
   m_ObjectHideFlags: 0

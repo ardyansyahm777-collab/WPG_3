@@ -181,7 +181,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 912ef1ec370c0bc418840129d9e1e785, type: 3}
   m_Name: 
   m_EditorClassIdentifier: WPG_3.Scripts::WpgGame.Combat.HealthSystem
-  MaxHP: 200
+  MaxHP: 5
 --- !u!114 &3977240491174144867
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -195,6 +195,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: WPG_3.Scripts::WpgGame.Enemy.EnemyAI
   MoveSpeed: 2
-  ContactDamage: 110
+  ContactDamage: 20
   ContactInterval: 0.5
   Health: {fileID: 0}
