@@ -9,7 +9,7 @@ Game top-down shooter survival roguelike untuk **PC (keyboard + mouse)** dan **M
 - **Engine**: Unity 6.6.0f1 + URP 2D + Input System + TextMeshPro
 - **Target build**: Android (touch) + Windows Standalone
 - **Orientasi**: Landscape 16:9
-- **Judul sementara**: "Bhagas Nyipok Lanang" (placeholder — gampang diganti)
+- **Judul sementara**: "Bhagas Naksir Dipta" (placeholder)
 - **Aset**: Semua placeholder shape 2D untuk saat ini; art menyusul
 
 ## Struktur Folder
