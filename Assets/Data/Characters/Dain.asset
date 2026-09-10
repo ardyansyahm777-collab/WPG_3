@@ -5,54 +5,55 @@ MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c4a51e2bd7f048f9a3d6c1e5f7082946, type: 3}
   m_Name: Dain
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   Id: dain
   DisplayName: Dain
   Role: Shadow Blade
   PortraitText: DA
   IsUnlocked: 0
   Price: 1200
-  HP: 1200
-  PhysicalAttack: 85
-  PhysicalDefense: 40
-  AttackSpeed: 1.1
-  CritChance: 10
-  Mana: 300
-  MagicPower: 0
-  MagicalDefense: 35
-  CooldownReduction: 0
-  MovementSpeed: 5
-  HPRegen: 8
-  PhysicalPEN: 0
-  Lifesteal: 0
-  BasicAttackRange: 5.5
-  CritDamage: 200
-  HealEffect: 100
-  ManaRegen: 5
+  HP: 1350
+  PhysicalAttack: 110
+  PhysicalDefense: 45
+  AttackSpeed: 1.3
+  CritChance: 25
+  Mana: 250
+  MagicPower: 10
+  MagicalDefense: 30
+  CooldownReduction: 8
+  MovementSpeed: 4.8
+  HPRegen: 10
+  PhysicalPEN: 15
+  Lifesteal: 8
+  BasicAttackRange: 1.5
+  CritDamage: 250
+  HealEffect: 110
+  ManaRegen: 4
   MagicalPEN: 0
   SpellVamp: 0
   IncomingHeal: 100
   Skill1:
     Name: Blink Strike
-    Desc: Dash + crit. Damage +50% selama 3 detik. [Tombol 1]
-    Cooldown: 8
+    Desc: Menghilang dan muncul di belakang target utama, memberikan Critical Hit pasti. Berikan buff Attack berikutnya +20%.
+    Cooldown: 10
     Value: 1.5
   Skill2:
     Name: Thousand Cuts
-    Desc: MultiShot +1 selama 5 detik. [Tombol 2]
+    Desc: 'MultiShot +1 selama 5 detik. [Tombol 2]'
     Cooldown: 12
     Value: 1
   Skill3:
     Name: Vanish
-    Desc: Memulihkan 300 HP seketika. [Tombol 3]
+    Desc: 'Memulihkan 300 HP seketika. [Tombol 3]'
     Cooldown: 20
     Value: 300
   Passive:
     Name: Lethal Edge
-    Desc: +1 MultiShot tiap 10 kill (stack).
+    Desc: Setiap 10 kill, mendapatkan stack 'Murderer'. Setiap stack meningkatkan MultiShot sebesar 1. Reset setelah mati.
     Value: 10
