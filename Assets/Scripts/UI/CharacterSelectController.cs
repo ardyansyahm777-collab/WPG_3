@@ -268,6 +268,17 @@ namespace WpgGame.UI
             }
         }
 
+        /// <summary>
+        /// Bersihkan sisa objek runtime (kartu spawn + baris detail) dan kembalikan
+        /// ke MainMenu. Dipakai tooling validasi agar scene tersimpan bersih.
+        /// </summary>
+        public void CleanupRuntime()
+        {
+            ClearCards();
+            ClearDetail();
+            HideSelect();
+        }
+
         public void ToggleSelect()
         {
             if (IsShowing)
@@ -597,8 +608,8 @@ namespace WpgGame.UI
             }
 
             tabButton.targetGraphic.color = active
-                ? new Color(1f, 1f, 1f, 1f)
-                : new Color(1f, 1f, 1f, 0.55f);
+                ? new Color(0.22f, 0.74f, 0.97f, 1f)
+                : new Color(1f, 1f, 1f, 0.1f);
         }
 
         private void ClearCards()
@@ -722,12 +733,15 @@ namespace WpgGame.UI
                 return;
             }
 
-            // Baris 1 kolom fixed-height: judul + nilai sebaris, tanpa nested layout
-            // (anti-fragile terhadap preferred-size TMP).
+            // Baris 1 kolom fixed-height: label muted + nilai tebal sebaris,
+            // tanpa nested layout (anti-fragile terhadap preferred-size TMP).
             GameObject go = new GameObject("Row_" + title, typeof(RectTransform));
             go.transform.SetParent(detailContent, false);
 
-            TMP_Text tmp = StretchText(go, title + ": " + value, 24, TextAlignmentOptions.Left);
+            TMP_Text tmp = StretchText(go,
+                "<color=#94A3B8>" + title + ":</color>  <b>" + value + "</b>",
+                24, TextAlignmentOptions.Left);
+            tmp.richText = true;
             FixRowHeight(go, 56f);
         }
 
@@ -762,9 +776,11 @@ namespace WpgGame.UI
             GameObject go = new GameObject("Row_" + title, typeof(RectTransform));
             go.transform.SetParent(detailContent, false);
 
-            // Satu TMP full-rect fixed-height: judul tebal + isi. Tinggi dikunci agar
+            // Satu TMP full-rect fixed-height: judul aksen cyan + isi. Tinggi dikunci agar
             // tidak bergantung preferred-size (lihat FixRowHeight).
-            TMP_Text tmp = StretchText(go, "<b>" + title + "</b>\n" + body, 24, TextAlignmentOptions.TopLeft);
+            TMP_Text tmp = StretchText(go,
+                "<color=#38BDF8><b>" + title + "</b></color>\n" + body,
+                24, TextAlignmentOptions.TopLeft);
             tmp.richText = true;
             FixRowHeight(go, bodyHeight);
         }

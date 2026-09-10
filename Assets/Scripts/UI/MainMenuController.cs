@@ -23,7 +23,7 @@ namespace WpgGame.UI
         {
             if (titleText != null && string.IsNullOrEmpty(titleText.text))
             {
-                titleText.text = "Bhagas naksir Dipta";
+                titleText.text = "WPG_3";
             }
 
             if (playButton != null)

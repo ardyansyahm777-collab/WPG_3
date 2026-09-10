@@ -23,6 +23,12 @@ namespace WpgGame.UI
         [SerializeField] private TMP_Text badgeText;
         [SerializeField] private GameObject selectedHighlight;
 
+        [Tooltip("Overlay gelap untuk kartu locked (assign di template). Boleh kosong.")]
+        [SerializeField] private GameObject lockedOverlay;
+
+        [Tooltip("Strip aksen atas kartu (assign di template). Boleh kosong.")]
+        [SerializeField] private Image accentStrip;
+
         public Button CardButton => cardButton;
 
         private void Awake()
@@ -86,6 +92,19 @@ namespace WpgGame.UI
                 bool locked = !data.IsUnlocked;
                 badgeText.text = locked ? "LOCKED" : string.Empty;
                 badgeText.gameObject.SetActive(locked);
+            }
+
+            bool isLocked = !data.IsUnlocked;
+            if (lockedOverlay != null)
+            {
+                lockedOverlay.SetActive(isLocked);
+            }
+
+            if (accentStrip != null)
+            {
+                accentStrip.color = isLocked
+                    ? new Color(1f, 1f, 1f, 0.25f)
+                    : new Color(0.22f, 0.74f, 0.97f, 1f);
             }
 
             if (selectedHighlight != null)
