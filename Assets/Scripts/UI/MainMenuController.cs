@@ -40,6 +40,12 @@ namespace WpgGame.UI
 
         private void OnEnable()
         {
+            // Segarkan layout sekali saat menu tampil: posisi anak ButtonRow bisa
+            // basi (mis. setelah tweak manual pivot/anchor di Editor) dan tidak
+            // selalu di-rebuild otomatis — tanpa ini PlayButton bisa terjebak
+            // di koordinat lama dan tumpang tindih HERO.
+            Canvas.ForceUpdateCanvases();
+
             if (heroesButton != null)
             {
                 heroesButton.onClick.RemoveListener(ToggleHeroes);
