@@ -116,7 +116,7 @@ namespace WpgGame.UI
             grid.childAlignment = TextAnchor.MiddleCenter;
             grid.padding = new RectOffset(24, 24, 24, 24);
             var gridRt = cardGrid.GetComponent<RectTransform>();
-            AnchorStretchCenter(gridRt, new Vector2(1400f, 700f), new Vector2(0f, -30f));
+            AnchorStretchCenter(gridRt, new Vector2(1400f, 700f), new Vector2(0f, 46f));
             var cardClose = FindOrCloneButton(cardPanel.transform, playBtn, "CardCloseButton", "TUTUP");
             StyleButton(cardClose, new Color(1f, 1f, 1f, 0.08f), Hex(FableText), 28, true);
             AnchorBottom(cardClose.GetComponent<RectTransform>(), new Vector2(0f, 90f));
@@ -353,8 +353,9 @@ namespace WpgGame.UI
             if (playLabel != null)
             {
                 playLabel.text = "PLAY";
-                // Layang pada Label (bukan tombol): aman dari HorizontalLayoutGroup.
-                GetOrAdd<FloatingObject>(playLabel.gameObject);
+                // SENGAJA tanpa FloatingObject: PLAY tetap tanpa layang
+                // (keputusan user) — jangan pasang animasi di sini agar Build
+                // tidak memasangnya kembali secara diam-diam.
             }
 
             MoveToRow(row.transform, heroesBtn, 1);
@@ -439,7 +440,7 @@ namespace WpgGame.UI
                 tmp = go.AddComponent<TextMeshProUGUI>();
             }
 
-            tmp.text = "SOON";
+            tmp.text = string.Empty; // Badge SOON nonaktif (keputusan user): objek dipertahankan, teks dikosongkan.
             tmp.fontSize = 20;
             tmp.color = Hex(FableGold);
             tmp.fontStyle = FontStyles.Bold;
