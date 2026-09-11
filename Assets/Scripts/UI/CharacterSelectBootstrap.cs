@@ -353,6 +353,8 @@ namespace WpgGame.UI
             if (playLabel != null)
             {
                 playLabel.text = "PLAY";
+                // Layang pada Label (bukan tombol): aman dari HorizontalLayoutGroup.
+                GetOrAdd<FloatingObject>(playLabel.gameObject);
             }
 
             MoveToRow(row.transform, heroesBtn, 1);
@@ -367,7 +369,7 @@ namespace WpgGame.UI
             heroesBtn.GetComponent<Button>().interactable = true;
 
             string[] soonNames = { "ShopButton", "EventButton", "SettingsButton" };
-            string[] soonLabels = { "SHOP", "EVENT", "SET" };
+            string[] soonLabels = { "SHOP", "EVENT", "SETTING" };
             for (int i = 0; i < soonNames.Length; i++)
             {
                 var soon = FindOrCloneButton(row.transform, playBtn, soonNames[i], soonLabels[i]);
@@ -405,6 +407,14 @@ namespace WpgGame.UI
             layout.preferredWidth = 170f;
             layout.minHeight = 170f;
             layout.preferredHeight = 170f;
+
+            // Pivot tengah wajib: pivot.x=1 menggeser tombol +85px (setengah lebar)
+            // dari slot HorizontalLayoutGroup (kasus PlayButton kemarin).
+            var rt = btn.GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                rt.pivot = new Vector2(0.5f, 0.5f);
+            }
         }
 
         private static void EnsureSoonBadge(GameObject btn)
