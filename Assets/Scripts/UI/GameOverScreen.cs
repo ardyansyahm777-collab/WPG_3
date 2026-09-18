@@ -14,6 +14,7 @@ namespace WpgGame.UI
         [Header("Refs")]
         [SerializeField] private GameObject panel;
         [SerializeField] private Button restartButton;
+        [SerializeField] private Button mainMenuButton;
         [SerializeField] private TMP_Text titleText;
 
         private void Awake()
