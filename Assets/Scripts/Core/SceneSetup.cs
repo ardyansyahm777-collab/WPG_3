@@ -93,15 +93,24 @@ namespace WpgGame.Core
         private static void EnsureMainCamera()
         {
             var cam = Camera.main;
-            if (cam != null) return;
-            var go = new GameObject("[Main Camera]");
-            go.tag = "MainCamera";
-            var c = go.AddComponent<Camera>();
-            c.orthographic = true;
-            c.orthographicSize = 5.4f; // ~1080p / 200 pixels-per-unit-ish, fine untuk prototipe landscape
-            c.backgroundColor = new Color(0.1f, 0.1f, 0.12f, 1f);
-            c.clearFlags = CameraClearFlags.SolidColor;
-            go.AddComponent<AudioListener>();
+            if (cam == null)
+            {
+                var go = new GameObject("[Main Camera]");
+                go.tag = "MainCamera";
+                var c = go.AddComponent<Camera>();
+                c.orthographic = true;
+                c.orthographicSize = 5.4f; // ~1080p / 200 pixels-per-unit-ish, fine untuk prototipe landscape
+                c.backgroundColor = new Color(0.1f, 0.1f, 0.12f, 1f);
+                c.clearFlags = CameraClearFlags.SolidColor;
+                go.AddComponent<AudioListener>();
+                cam = c;
+            }
+            // Kamera follow player: pastikan komponennya ada (target di-resolve otomatis
+            // oleh CameraFollow, atau di-set eksplisit oleh GameplaySetup).
+            if (cam.GetComponent<CameraFollow>() == null)
+            {
+                cam.gameObject.AddComponent<CameraFollow>();
+            }
         }
     }
 }
