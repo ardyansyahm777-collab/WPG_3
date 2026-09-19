@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 4851397210169357794}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.2311828, y: -0.5, z: 0}
+  m_LocalPosition: {x: -0.022, y: -0.009, z: 0}
   m_LocalScale: {x: 0.26881722, y: 0.26881722, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -215,8 +215,8 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Radius: 0.21
+  m_Offset: {x: -0.014705747, y: 0.0065908134}
+  m_Radius: 0.440322
 --- !u!212 &3173177110421631223
 SpriteRenderer:
   serializedVersion: 3
@@ -351,5 +351,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: WPG_3.Scripts::WpgGame.Player.AutoAimShooter
   ProjectilePrefab: {fileID: 4409588358912852681, guid: 4966532b850006b4588ba1a661fe739c, type: 3}
   FirePoint: {fileID: 0}
+  MuzzleOffset: {x: 0, y: 0}
+  AimRadius: 12
   SpreadRadians: 0.15
   AutoCreateProjectile: 1
