@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 852444546935448043}
   - component: {fileID: 6108001932963617850}
+  - component: {fileID: 7842098199658292801}
   m_Layer: 0
   m_Name: Square
   m_TagString: Untagged
@@ -26,8 +27,8 @@ Transform:
   m_GameObject: {fileID: 4851397210169357794}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.2, y: 0.2, z: 1}
+  m_LocalPosition: {x: -0.2311828, y: -0.5, z: 0}
+  m_LocalScale: {x: 0.26881722, y: 0.26881722, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 554750147238343159}
@@ -81,7 +82,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  m_Sprite: {fileID: 8793639957104055765, guid: 7b60e25d98088634e99a02ae62a2bcf8, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -92,6 +93,28 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
+--- !u!95 &7842098199658292801
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4851397210169357794}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: d6527e2d5419bc443ae5660b13e96b48, type: 2}
+  m_CullingMode: 1
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &7636214950815096002
 GameObject:
   m_ObjectHideFlags: 0
@@ -311,7 +334,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1674298db56f3424a9939d1153f8e5a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: WPG_3.Scripts::WpgGame.Player.PlayerController
-  moveAction: {fileID: 0}
+  moveAction: {fileID: -1680190386980627800, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   rb: {fileID: 0}
   stats: {fileID: 0}
 --- !u!114 &245738885881464936
@@ -328,7 +351,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: WPG_3.Scripts::WpgGame.Player.AutoAimShooter
   ProjectilePrefab: {fileID: 4409588358912852681, guid: 4966532b850006b4588ba1a661fe739c, type: 3}
   FirePoint: {fileID: 0}
-  AimRadius: 12
-  MinAimDistance: 0.5
   SpreadRadians: 0.15
   AutoCreateProjectile: 1

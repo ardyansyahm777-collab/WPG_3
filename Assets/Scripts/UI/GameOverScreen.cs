@@ -28,6 +28,11 @@ namespace WpgGame.UI
             {
                 restartButton.onClick.AddListener(OnRestartClicked);
             }
+
+            if (mainMenuButton != null)
+            {
+                mainMenuButton.onClick.AddListener(OnMainMenuClicked);
+            }
         }
 
         private void OnEnable()
@@ -61,6 +66,12 @@ namespace WpgGame.UI
         public void OnRestartClicked()
         {
             GameManager.Instance?.Restart();
+        }
+
+        /// <summary>Tombol MainmenuButton: kembali ke scene Main Menu (reset bersih).</summary>
+        public void OnMainMenuClicked()
+        {
+            GameManager.Instance?.GoToMainMenu();
         }
     }
 }

@@ -43,6 +43,12 @@ namespace WpgGame.Core
             Instance = this;
             DontDestroyOnLoad(gameObject);
             State = initialState;
+
+            // Batasi FPS: tanpa ini Unity me-render secepat mungkin (ratusan FPS di scene
+            // ringan) sehingga CPU/GPU 100% → kipas meraung, di laptop maupun HP.
+            // 60 hemat baterai dan cukup untuk top-down 2D. Berlaku untuk Editor Play + build.
+            if (Application.targetFrameRate != 60)
+                Application.targetFrameRate = 60;
         }
 
         public void SetState(GameState newState)
@@ -69,16 +75,32 @@ namespace WpgGame.Core
 
         public void Restart()
         {
-            // Restart bersih: buang subscriber statis scene lama agar tidak basi,
-            // reset state langsung (bypass cooldown), lalu reload active scene.
-            // Instance DontDestroyOnLoad selamat dari reload, jadi reset eksplisit wajib.
+            PrepareSceneLoad();
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            UnityEngine.SceneManagement.SceneManager.LoadScene(scene.buildIndex);
+        }
+
+        /// <summary>
+        /// Kembali ke Main Menu: reset bersih seperti Restart lalu load scene menu.
+        /// Dipakai tombol MainmenuButton di GameOverScreen.
+        /// </summary>
+        public void GoToMainMenu()
+        {
+            PrepareSceneLoad();
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Main Menu");
+        }
+
+        /// <summary>
+        /// Reset bersih sebelum pindah scene: buang subscriber statis scene lama agar tidak basi,
+        /// reset state langsung (bypass cooldown). Instance DontDestroyOnLoad selamat dari
+        /// reload, jadi reset eksplisit wajib.
+        /// </summary>
+        private void PrepareSceneLoad()
+        {
             GameEvents.ClearAll();
             OnStateChanged = null;
             State = GameState.Playing;
             _lastStateChangeTime = Time.unscaledTime;
-
-            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-            UnityEngine.SceneManagement.SceneManager.LoadScene(scene.buildIndex);
         }
     }
 }
