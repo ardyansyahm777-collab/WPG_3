@@ -81,6 +81,7 @@ namespace WpgGame.Player
 
             var player = GetOrCreatePlayer();
             ApplyPendingHero(player);
+            BindCameraToPlayer(player);
 
             var spawner = Object.FindFirstObjectByType<EnemySpawner>();
             if (spawner == null)
@@ -117,6 +118,20 @@ namespace WpgGame.Player
             if (stats != null) stats.ApplyCharacter(PendingCharacter);
             var skill = player.GetComponent<HeroSkill>();
             if (skill != null) skill.Character = PendingCharacter;
+        }
+
+        /// <summary>
+        /// Pastikan Main Camera follow player. CameraFollow auto-find bila Target null,
+        /// tapi assign eksplisit di sini agar snap langsung tanpa nunggu LateUpdate pertama.
+        /// </summary>
+        private static void BindCameraToPlayer(GameObject player)
+        {
+            if (player == null) return;
+            var cam = Camera.main;
+            if (cam == null) return;
+            var follow = cam.GetComponent<Core.CameraFollow>();
+            if (follow == null) follow = cam.gameObject.AddComponent<Core.CameraFollow>();
+            follow.SetTarget(player.transform);
         }
 
         private static void EnsureHeroSkill(GameObject player)

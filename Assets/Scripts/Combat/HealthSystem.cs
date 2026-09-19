@@ -47,5 +47,16 @@ namespace WpgGame.Combat
             CurrentHP = Mathf.Min(MaxHP, CurrentHP + amount);
             OnHealthChanged?.Invoke(CurrentHP, MaxHP);
         }
+
+        /// <summary>
+        /// Kembalikan HP penuh dan hapus status mati. Dipakai object pool saat instance dipakai ulang.
+        /// (Additive terhadap kontrak API: tidak mengubah signature yang ada.)
+        /// </summary>
+        public void ResetHealth()
+        {
+            IsDead = false;
+            CurrentHP = MaxHP;
+            OnHealthChanged?.Invoke(CurrentHP, MaxHP);
+        }
     }
 }

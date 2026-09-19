@@ -81,7 +81,7 @@ namespace WpgGame.Combat
             bool outOfRange = MaxRange > 0f && Vector2.Distance(_startPosition, transform.position) > MaxRange;
             if (timeout || outOfRange)
             {
-                Destroy(gameObject);
+                PrefabPool.Despawn(gameObject);
             }
         }
 
@@ -112,7 +112,7 @@ namespace WpgGame.Combat
             if (health == null || health.IsDead) return;
 
             health.TakeDamage(Damage);
-            Destroy(gameObject);
+            PrefabPool.Despawn(gameObject);
         }
 
         private bool IsGameplayFrozen()

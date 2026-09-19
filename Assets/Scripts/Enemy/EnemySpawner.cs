@@ -21,6 +21,10 @@ namespace WpgGame.Enemy
         [Tooltip("Jumlah musuh yang muncul per wave.")]
         public int WaveSize = 1;
 
+        [Tooltip("Batas musuh hidup. Wave dilewati/dipangkas bila jumlah hidup sudah mencapai batas " +
+                 "(anti-penumpukan → CPU/GPU & kipas stabil). <=0 = tanpa batas.")]
+        public int MaxAliveEnemies = 40;
+
         [Tooltip("Titik referensi spawn (pemain). Kosongkan = cari player otomatis.")]
         public Transform Player;
 
@@ -53,6 +57,10 @@ namespace WpgGame.Enemy
         {
             if (_spawning) return;
             _spawning = true;
+            // Hangatkan pool di awal (clamp agar tidak hitch bila MaxAlive besar).
+            // Hanya saat play: cegah sampah [Pool] masuk ke scene saat dibuka di Editor.
+            if (Application.isPlaying && EnemyPrefab != null)
+                PrefabPool.GetOrCreate(EnemyPrefab, Mathf.Clamp(MaxAliveEnemies, 8, 24), 120);
             if (_loopRoutine == null) _loopRoutine = StartCoroutine(SpawnLoop());
         }
 
@@ -86,22 +94,32 @@ namespace WpgGame.Enemy
         {
             if (EnemyPrefab == null) return;
 
-            var origin = ResolveSpawnOrigin();
             int n = Mathf.Max(0, WaveSize);
             if (n == 0) return;
 
-            for (int i = 0; i < n; i++)
+            // Cap: jangan tambah beban bila musuh hidup sudah menumpuk (mis. player AFK /
+            // tidak membunuh). Dipangkas, bukan dilewati total, agar wave tetap terasa hidup.
+            int allowed = n;
+            if (MaxAliveEnemies > 0)
+            {
+                allowed = Mathf.Min(n, Mathf.Max(0, MaxAliveEnemies - CountAliveEnemies()));
+                if (allowed <= 0) return;
+            }
+
+            var origin = ResolveSpawnOrigin();
+
+            for (int i = 0; i < allowed; i++)
             {
                 Vector2 basePos = origin != null ? (Vector2)origin.position : Vector2.zero;
                 float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
                 float radius = Random.Range(SpawnRadiusMin, SpawnRadiusMax);
                 Vector2 pos = basePos + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
 
-                var instance = Instantiate(EnemyPrefab, pos, Quaternion.identity);
-                if (instance != null && !instance.activeSelf) instance.SetActive(true);
+                var instance = PrefabPool.Spawn(EnemyPrefab, pos, Quaternion.identity);
+                if (instance == null) continue;
             }
 
-            OnWaveSpawned?.Invoke(n);
+            OnWaveSpawned?.Invoke(allowed);
         }
 
         private Transform ResolveSpawnOrigin()
@@ -110,6 +128,24 @@ namespace WpgGame.Enemy
             var controller = FindFirstObjectByType<PlayerController>();
             if (controller != null) Player = controller.transform;
             return Player;
+        }
+
+        /// <summary>
+        /// Hitung musuh yang benar-benar hidup. Hanya dipanggil per-wave (tiap SpawnInterval),
+        /// bukan per-frame, jadi FindObjects di sini murah.
+        /// </summary>
+        private static int CountAliveEnemies()
+        {
+            var all = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+            int count = 0;
+            for (int i = 0; i < all.Length; i++)
+            {
+                var e = all[i];
+                if (e == null || !e.gameObject.activeInHierarchy) continue;
+                if (e.Health != null && e.Health.IsDead) continue;
+                count++;
+            }
+            return count;
         }
     }
 }

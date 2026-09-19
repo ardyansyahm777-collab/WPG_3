@@ -77,7 +77,8 @@ namespace WpgGame.Progression
         private void Collect()
         {
             GameEvents.RaiseExperienceGained(expAmount);
-            Destroy(gameObject);
+            // Kembali ke pool bila ada; fallback Destroy untuk spawn manual.
+            PrefabPool.Despawn(gameObject);
         }
 
         private bool TryFindPlayer()

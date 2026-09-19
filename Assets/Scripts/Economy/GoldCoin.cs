@@ -76,7 +76,8 @@ namespace WpgGame.Economy
         private void Collect()
         {
             GoldManager.Instance?.Add(goldAmount);
-            Destroy(gameObject);
+            // Kembali ke pool bila ada; fallback Destroy untuk spawn manual.
+            PrefabPool.Despawn(gameObject);
         }
 
         private bool TryFindPlayer()

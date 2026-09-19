@@ -9,7 +9,7 @@ namespace WpgGame.Enemy
     /// <summary>
     /// AI sederhana musuh: mengejar player (ditemukan lewat komponen PlayerController),
     /// bergerak memakai Rigidbody2D.linearVelocity, dan memberi ContactDamage ke player saat bersentuhan.
-    /// Saat HP habis: menaikkan OnEnemyDefeated + broadcast GameEvents.RaiseEnemyKilled lalu menghancurkan diri.
+    /// Saat HP habis: menaikkan OnEnemyDefeated + broadcast GameEvents.RaiseEnemyKilled lalu kembali ke pool.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(HealthSystem))]
@@ -43,7 +43,12 @@ namespace WpgGame.Enemy
 
         private void OnEnable()
         {
-            if (Health != null) Health.OnDeath += HandleDeath;
+            // Instance pool dipakai ulang: pastikan HP penuh setiap kali diaktifkan.
+            if (Health != null)
+            {
+                Health.ResetHealth();
+                Health.OnDeath += HandleDeath;
+            }
         }
 
         private void OnDisable()
@@ -55,7 +60,8 @@ namespace WpgGame.Enemy
         {
             OnEnemyDefeated?.Invoke(this);
             GameEvents.RaiseEnemyKilled(gameObject);
-            Destroy(gameObject);
+            // Kembali ke pool bila ada (tanpa GC spike); fallback Destroy untuk spawn manual.
+            PrefabPool.Despawn(gameObject);
         }
 
         private void FixedUpdate()
