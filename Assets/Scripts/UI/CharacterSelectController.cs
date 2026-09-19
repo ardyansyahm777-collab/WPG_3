@@ -78,6 +78,25 @@ namespace WpgGame.UI
 
         private readonly List<CharacterCard> spawnedCards = new List<CharacterCard>();
 
+        /// <summary>
+        /// Kartu PERSISTEN: ditaruh manual di hierarchy (CardGrid) agar bisa diedit visual
+        /// di edit-mode. Diadopsi otomatis saat RenderCards/ClearCards dan TIDAK PERNAH
+        /// dihancurkan (berbeda dari kartu hasil spawn yang dibuang tiap render).
+        /// </summary>
+        private readonly List<CharacterCard> persistentCards = new List<CharacterCard>();
+
+        /// <summary>
+        /// Panel showcase per-hero (Showcase_Nama, anak langsung showcasePanel). Ditemukan
+        /// otomatis; bila tak ada, dipakai jalur legacy (Center + DetailScroll bawaan).
+        /// </summary>
+        private readonly List<Transform> heroShowcases = new List<Transform>();
+
+        private Transform legacyShowcaseCenter;
+        private Transform legacyDetailScroll;
+
+        /// <summary>Konten detail aktif untuk baris runtime (diisi tiap RenderShowcase).</summary>
+        private Transform activeDetailContent;
+
         private InputAction runtimeCancel;
 
         public bool IsShowing =>
@@ -279,7 +298,7 @@ namespace WpgGame.UI
         public void CleanupRuntime()
         {
             ClearCards();
-            ClearDetail();
+            ClearDetails();
             HideSelect();
         }
 
@@ -295,6 +314,11 @@ namespace WpgGame.UI
             }
         }
 
+        /// <summary>
+        /// Render kartu hero ke grid. Kartu persisten (edit manual di hierarchy) dipakai ulang
+        /// dan hanya di-Bind ulang; kartu baru di-spawn dari template bila kurang. Kartu persisten
+        /// yang tak kebagian hero disembunyikan (tidak dihancurkan) agar edit-an user aman.
+        /// </summary>
         public void RenderCards()
         {
             if (cardGrid == null || cardPrefab == null || heroes == null || heroes.Length == 0)
@@ -306,6 +330,14 @@ namespace WpgGame.UI
 
             ClearCards();
 
+            if (cardPrefab.transform.IsChildOf(cardGrid))
+            {
+                cardPrefab.gameObject.SetActive(false);
+                cardPrefab.transform.SetAsFirstSibling();
+            }
+
+            var used = new HashSet<CharacterCard>();
+            int order = 0;
             for (int i = 0; i < heroes.Length; i++)
             {
                 CharacterData data = heroes[i];
@@ -314,12 +346,45 @@ namespace WpgGame.UI
                     continue;
                 }
 
-                CharacterCard card = Instantiate(cardPrefab, cardGrid);
+                // 1) Kartu yang namanya sudah cocok (stabil antar render).
+                // 2) Kartu persisten pertama yang belum dipakai (urutan hierarchy).
+                // 3) Spawn baru dari template (fallback).
+                CharacterCard card = FindPersistentByName("Card_" + ResolveHeroTitle(data, i), used);
+                if (card == null)
+                {
+                    for (int p = 0; p < persistentCards.Count; p++)
+                    {
+                        CharacterCard cand = persistentCards[p];
+                        if (cand != null && !used.Contains(cand))
+                        {
+                            card = cand;
+                            break;
+                        }
+                    }
+                }
+
+                if (card == null)
+                {
+                    card = Instantiate(cardPrefab, cardGrid);
+                }
+
                 card.gameObject.SetActive(true);
+                card.transform.SetSiblingIndex(order + 1);
+                order++;
 
                 int captured = i;
                 card.Bind(data, captured == selectedIndex, () => SetSelected(captured));
                 spawnedCards.Add(card);
+                used.Add(card);
+            }
+
+            for (int p = 0; p < persistentCards.Count; p++)
+            {
+                CharacterCard c = persistentCards[p];
+                if (c != null && !used.Contains(c))
+                {
+                    c.gameObject.SetActive(false);
+                }
             }
         }
 
@@ -342,33 +407,44 @@ namespace WpgGame.UI
                 ? hero.DisplayName
                 : ResolveHeroId(hero, selectedIndex);
 
-            if (heroNameText != null)
+            // Showcase per-hero bila ada (fallback ke refs legacy bila tidak ada).
+            DiscoverShowcases();
+            Transform showcase = FindShowcasePanel(title);
+            Transform content = ResolveShowcaseContent(showcase);
+            TMP_Text nameT = ResolveShowcaseText(showcase, "Center/HeroNameText", heroNameText);
+            TMP_Text roleT = ResolveShowcaseText(showcase, "Center/HeroRoleText", heroRoleText);
+            Image portraitImg = ResolveShowcaseImage(showcase, "Center/HeroPortraitImage", heroPortraitImage);
+            TMP_Text portraitT = ResolveShowcaseText(showcase, "Center/HeroPortraitText", heroPortraitFallbackText);
+            ShowOnlyShowcase(showcase);
+            activeDetailContent = content;
+
+            if (nameT != null)
             {
-                heroNameText.text = title;
+                nameT.text = title;
             }
 
-            if (heroRoleText != null)
+            if (roleT != null)
             {
-                heroRoleText.text = string.IsNullOrEmpty(hero.Role) ? "-" : hero.Role;
+                roleT.text = string.IsNullOrEmpty(hero.Role) ? "-" : hero.Role;
             }
 
-            if (heroPortraitImage != null)
+            if (portraitImg != null)
             {
                 // API baru tidak punya Sprite portrait: sembunyikan Image,
                 // tampilkan PortraitText (inisial) sebagai placeholder TMP.
-                heroPortraitImage.enabled = false;
+                portraitImg.enabled = false;
             }
 
-            if (heroPortraitFallbackText != null)
+            if (portraitT != null)
             {
                 string portrait = !string.IsNullOrEmpty(hero.PortraitText)
                     ? hero.PortraitText
                     : (title.Length > 0 ? title.Substring(0, 1).ToUpper() : string.Empty);
-                heroPortraitFallbackText.text = portrait;
-                heroPortraitFallbackText.gameObject.SetActive(true);
+                portraitT.text = portrait;
+                portraitT.gameObject.SetActive(true);
             }
 
-            ClearDetail();
+            ClearDetails();
 
             if (activeTab == (int)HeroTab.Stat)
             {
@@ -589,6 +665,187 @@ namespace WpgGame.UI
             return "hero_" + fallbackIndex;
         }
 
+        /// <summary>Judul kartu versi Bind (DisplayName else Id else "Hero").</summary>
+        private static string ResolveHeroTitle(CharacterData hero, int fallbackIndex)
+        {
+            if (hero == null)
+            {
+                return "Hero";
+            }
+
+            if (!string.IsNullOrEmpty(hero.DisplayName))
+            {
+                return hero.DisplayName;
+            }
+
+            if (!string.IsNullOrEmpty(hero.Id))
+            {
+                return hero.Id;
+            }
+
+            return "Hero";
+        }
+
+        /// <summary>
+        /// Cari kartu persisten yang namanya sudah cocok dan belum dipakai render ini.
+        /// Membuat mapping hero↔kartu stabil antar render (tidak tertukar).
+        /// </summary>
+        private CharacterCard FindPersistentByName(string cardName, HashSet<CharacterCard> used)
+        {
+            if (string.IsNullOrEmpty(cardName))
+            {
+                return null;
+            }
+
+            for (int i = 0; i < persistentCards.Count; i++)
+            {
+                CharacterCard cand = persistentCards[i];
+                if (cand != null && !used.Contains(cand) && cand.gameObject.name == cardName)
+                {
+                    return cand;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Pindai anak langsung showcasePanel: kumpulkan Showcase_* dan catat Center /
+        /// DetailScroll legacy (fallback bila panel per-hero tidak ada).
+        /// </summary>
+        private void DiscoverShowcases()
+        {
+            heroShowcases.Clear();
+            legacyShowcaseCenter = null;
+            legacyDetailScroll = null;
+            if (showcasePanel == null)
+            {
+                return;
+            }
+
+            Transform root = showcasePanel.transform;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform child = root.GetChild(i);
+                if (child == null)
+                {
+                    continue;
+                }
+
+                if (child.name.StartsWith("Showcase_"))
+                {
+                    heroShowcases.Add(child);
+                }
+                else if (child.name == "Center")
+                {
+                    legacyShowcaseCenter = child;
+                }
+                else if (child.name == "DetailScroll")
+                {
+                    legacyDetailScroll = child;
+                }
+            }
+        }
+
+        /// <summary>Cari panel Showcase_Judul untuk hero aktif (null bila belum dibuat).</summary>
+        private Transform FindShowcasePanel(string title)
+        {
+            if (string.IsNullOrEmpty(title))
+            {
+                return null;
+            }
+
+            string want = "Showcase_" + title;
+            for (int i = 0; i < heroShowcases.Count; i++)
+            {
+                Transform t = heroShowcases[i];
+                if (t != null && t.name == want)
+                {
+                    return t;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Tampilkan hanya panel hero aktif. Bila panel per-hero ada, Center + DetailScroll
+        /// legacy disembunyikan (isinya basi); bila tidak ada, legacy dipastikan tampil.
+        /// Tombol/tab/bingkai shared tidak disentuh.
+        /// </summary>
+        private void ShowOnlyShowcase(Transform active)
+        {
+            for (int i = 0; i < heroShowcases.Count; i++)
+            {
+                Transform t = heroShowcases[i];
+                if (t != null)
+                {
+                    t.gameObject.SetActive(t == active);
+                }
+            }
+
+            bool legacy = active == null;
+            if (legacyShowcaseCenter != null)
+            {
+                legacyShowcaseCenter.gameObject.SetActive(legacy);
+            }
+
+            if (legacyDetailScroll != null)
+            {
+                legacyDetailScroll.gameObject.SetActive(legacy);
+            }
+        }
+
+        private static TMP_Text ResolveShowcaseText(Transform panel, string path, TMP_Text fallback)
+        {
+            if (panel != null)
+            {
+                Transform t = panel.Find(path);
+                if (t != null)
+                {
+                    TMP_Text tmp = t.GetComponent<TMP_Text>();
+                    if (tmp != null)
+                    {
+                        return tmp;
+                    }
+                }
+            }
+
+            return fallback;
+        }
+
+        private static Image ResolveShowcaseImage(Transform panel, string path, Image fallback)
+        {
+            if (panel != null)
+            {
+                Transform t = panel.Find(path);
+                if (t != null)
+                {
+                    Image img = t.GetComponent<Image>();
+                    if (img != null)
+                    {
+                        return img;
+                    }
+                }
+            }
+
+            return fallback;
+        }
+
+        private Transform ResolveShowcaseContent(Transform panel)
+        {
+            if (panel != null)
+            {
+                Transform dc = panel.Find("DetailScroll/Viewport/DetailContent");
+                if (dc != null)
+                {
+                    return dc;
+                }
+            }
+
+            return detailContent;
+        }
+
         private void AddSkill(int slot, string name, string desc, float cooldown)
         {
             string title = "[Tombol " + slot + "] " + (string.IsNullOrEmpty(name) ? "Skill " + slot : name);
@@ -616,23 +873,21 @@ namespace WpgGame.UI
                 : new Color(1f, 1f, 1f, 0.1f);
         }
 
+        /// <summary>
+        /// Sapu grid: template dimatikan; kartu buatan user diadopsi sebagai persisten (TIDAK dihancurkan);
+        /// sampah non-kartu dibuang. Lalu hancurkan HANYA kartu hasil spawn sebelumnya.
+        /// Aman dipanggil berulang (OnDisable/RenderCards/CleanupRuntime).
+        /// </summary>
         private void ClearCards()
         {
-            for (int i = 0; i < spawnedCards.Count; i++)
+            if (cardGrid != null)
             {
-                if (spawnedCards[i] != null)
-                {
-                    DestroyNmi(spawnedCards[i].gameObject);
-                }
-            }
-
-            spawnedCards.Clear();
-
-            if (cardGrid != null && cardPrefab != null)
-            {
-                // Mundur by-index: aman untuk DestroyImmediate (forward foreach
-                // akan skip child saat hierarchy bergeser).
-                for (int i = cardGrid.childCount - 1; i >= 0; i--)
+                // Dua pass tanpa mutasi saat iterasi: adopsi maju by-index agar urutan
+                // sibling deterministik, lalu buang sampah non-kartu sekaligus.
+                // (DestroyImmediate di edit-mode menggeser sibling — forward + hapus
+                // langsung akan skip anak.)
+                var junk = new List<GameObject>();
+                for (int i = 0; i < cardGrid.childCount; i++)
                 {
                     Transform child = cardGrid.GetChild(i);
                     if (child == null)
@@ -640,52 +895,102 @@ namespace WpgGame.UI
                         continue;
                     }
 
-                    if (child.gameObject == cardPrefab.gameObject)
+                    if (cardPrefab != null && child.gameObject == cardPrefab.gameObject)
                     {
                         child.gameObject.SetActive(false);
                         continue;
                     }
 
-                    var leftover = child.GetComponent<CharacterCard>();
-                    if (leftover != null && leftover != cardPrefab)
+                    CharacterCard cc = child.GetComponent<CharacterCard>();
+                    if (cc == null)
                     {
-                        DestroyNmi(child.gameObject);
-                    }
-                    else if (cardPrefab.transform.IsChildOf(cardGrid))
-                    {
+                        junk.Add(child.gameObject);
                         continue;
                     }
-                    else
+
+                    if (!spawnedCards.Contains(cc) && !persistentCards.Contains(cc))
                     {
-                        DestroyNmi(child.gameObject);
+                        persistentCards.Add(cc);
                     }
                 }
+
+                for (int i = 0; i < junk.Count; i++)
+                {
+                    DestroyNmi(junk[i]);
+                }
+
+                for (int i = persistentCards.Count - 1; i >= 0; i--)
+                {
+                    if (persistentCards[i] == null)
+                    {
+                        persistentCards.RemoveAt(i);
+                    }
+                }
+            }
+
+            for (int i = 0; i < spawnedCards.Count; i++)
+            {
+                CharacterCard c = spawnedCards[i];
+                if (c == null || persistentCards.Contains(c))
+                {
+                    continue;
+                }
+
+                DestroyNmi(c.gameObject);
+            }
+
+            spawnedCards.Clear();
+        }
+
+        /// <summary>
+        /// Bersihkan SEMUA konten detail (legacy + tiap panel per-hero) agar tidak ada baris
+        /// basi saat ganti hero/tab. Dipanggil tiap RenderShowcase + CleanupRuntime.
+        /// </summary>
+        private void ClearDetails()
+        {
+            ClearContent(detailContent);
+            for (int i = 0; i < heroShowcases.Count; i++)
+            {
+                Transform t = heroShowcases[i];
+                if (t == null)
+                {
+                    continue;
+                }
+
+                Transform dc = t.Find("DetailScroll/Viewport/DetailContent");
+                ClearContent(dc);
             }
         }
 
         private void ClearDetail()
         {
-            if (detailContent == null)
+            ClearContent(detailContent);
+        }
+
+        private static void ClearContent(Transform content)
+        {
+            if (content == null)
             {
                 return;
             }
 
             // Mundur by-index: aman untuk DestroyImmediate.
-            for (int i = detailContent.childCount - 1; i >= 0; i--)
+            for (int i = content.childCount - 1; i >= 0; i--)
             {
-                Transform child = detailContent.GetChild(i);
+                Transform child = content.GetChild(i);
                 if (child == null)
-                {
-                    continue;
-                }
-
-                if (statRowPrefab != null && child.gameObject == statRowPrefab)
                 {
                     continue;
                 }
 
                 DestroyNmi(child.gameObject);
             }
+        }
+
+        /// <summary>Konten tujuan baris runtime: aktif per-hero, fallback ke legacy.</summary>
+        private Transform TargetContent()
+        {
+            return activeDetailContent != null ? activeDetailContent : detailContent;
         }
 
         /// <summary>
@@ -711,14 +1016,15 @@ namespace WpgGame.UI
 
         private void AddRow(string title, string value)
         {
-            if (detailContent == null)
+            Transform content = TargetContent();
+            if (content == null)
             {
                 return;
             }
 
             if (statRowPrefab != null)
             {
-                GameObject row = Instantiate(statRowPrefab, detailContent);
+                GameObject row = Instantiate(statRowPrefab, content);
                 row.SetActive(true);
                 row.name = "Row_" + title;
 
@@ -741,7 +1047,7 @@ namespace WpgGame.UI
             // Baris 1 kolom fixed-height: label muted + nilai tebal sebaris,
             // tanpa nested layout (anti-fragile terhadap preferred-size TMP).
             GameObject go = new GameObject("Row_" + title, typeof(RectTransform));
-            go.transform.SetParent(detailContent, false);
+            go.transform.SetParent(content, false);
 
             TMP_Text tmp = StretchText(go,
                 "<color=#94A3B8>" + title + ":</color>  <b>" + value + "</b>",
@@ -752,7 +1058,8 @@ namespace WpgGame.UI
 
         private void AddParagraph(string title, string body, float bodyHeight)
         {
-            if (detailContent == null)
+            Transform content = TargetContent();
+            if (content == null)
             {
                 return;
             }
@@ -761,7 +1068,7 @@ namespace WpgGame.UI
             GameObject proto = paraRowPrefab != null ? paraRowPrefab : statRowPrefab;
             if (proto != null)
             {
-                GameObject row = Instantiate(proto, detailContent);
+                GameObject row = Instantiate(proto, content);
                 row.SetActive(true);
                 row.name = "Row_" + title;
 
@@ -781,7 +1088,7 @@ namespace WpgGame.UI
             }
 
             GameObject go = new GameObject("Row_" + title, typeof(RectTransform));
-            go.transform.SetParent(detailContent, false);
+            go.transform.SetParent(content, false);
 
             // Satu TMP full-rect fixed-height: judul aksen cyan + isi. Tinggi dikunci agar
             // tidak bergantung preferred-size (lihat FixRowHeight).

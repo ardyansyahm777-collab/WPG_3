@@ -29,6 +29,10 @@ namespace WpgGame.UI
         [Tooltip("Strip aksen atas kartu (assign di template). Boleh kosong.")]
         [SerializeField] private Image accentStrip;
 
+        [Tooltip("Jika true, warna AccentStrip hasil edit manual dipertahankan — Bind tidak menimpa " +
+                 "dengan warna locked/unlocked bawaan. Default false (perilaku lama).")]
+        [SerializeField] private bool preserveAccentColor;
+
         public Button CardButton => cardButton;
 
         private void Awake()
@@ -100,7 +104,7 @@ namespace WpgGame.UI
                 lockedOverlay.SetActive(isLocked);
             }
 
-            if (accentStrip != null)
+            if (accentStrip != null && !preserveAccentColor)
             {
                 accentStrip.color = isLocked
                     ? new Color(1f, 1f, 1f, 0.25f)
