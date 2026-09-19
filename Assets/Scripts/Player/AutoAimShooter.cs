@@ -2,13 +2,16 @@
 using UnityEngine.InputSystem;
 using WpgGame.Combat;
 using WpgGame.Core;
+using WpgGame.Enemy;
 
 namespace WpgGame.Player
 {
     /// <summary>
-    /// Tembakan dasar (basic attack) dengan trigger klik kiri mouse.
-    /// Satu klik = burst MultiShot proyektil mengarah ke posisi mouse.
-    /// FireRate dipakai sebagai cooldown anti-spam per burst (bukan auto-fire kontinu).
+    /// Tembakan otomatis mengarah ke posisi mouse — tanpa perlu klik.
+    /// Tiap interval FireRate menembakkan burst MultiShot ke arah kursor terkini.
+    /// Tanpa mouse (touch/HP): fallback auto-aim ke musuh terdekat dalam AimRadius;
+    /// bila tak ada target, tembakan ditahan (tidak buang proyektil).
+    /// Titik tembak: FirePoint bila diisi, else posisi + MuzzleOffset (default tengah badan).
     /// Freeze saat GameManager.State != Playing.
     /// </summary>
     [RequireComponent(typeof(PlayerStats))]
@@ -17,8 +20,14 @@ namespace WpgGame.Player
         [Tooltip("Prefab proyektil (berisi komponen Projectile + collider trigger).")]
         public GameObject ProjectilePrefab;
 
-        [Tooltip("Titik asal tembakan. Kosongkan = gunakan transform komponen ini.")]
+        [Tooltip("Titik asal tembakan. Kosongkan = posisi + MuzzleOffset.")]
         public Transform FirePoint;
+
+        [Tooltip("Offset titik tembak dari posisi. (0,0) = tepat tengah badan.")]
+        public Vector2 MuzzleOffset = Vector2.zero;
+
+        [Tooltip("Radius pencarian musuh terdekat (fallback sentuh saat tak ada mouse).")]
+        public float AimRadius = 12f;
 
         [Tooltip("Sudut sebar antar proyektil (radian) saat MultiShot > 1.")]
         public float SpreadRadians = 0.15f;
@@ -68,52 +77,83 @@ namespace WpgGame.Player
             if (_cooldown > 0f) return;
             if (IsInputLocked()) return;
 
-            // Trigger: klik kiri mouse.
-            var mouse = Mouse.current;
-            if (mouse == null) return;
-            if (!mouse.leftButton.wasPressedThisFrame) return;
-
-            Vector2 dir = GetMouseDirection();
+            Vector2 origin = GetMuzzlePosition();
+            Vector2 dir = GetAimDirection(origin);
             if (dir == Vector2.zero) return;
 
-            FireBurst(dir);
+            FireBurst(origin, dir);
             _cooldown = 1f / Mathf.Max(0.05f, _stats.FireRate);
         }
 
         /// <summary>
-        /// Arah tembakan: dari fire point ke posisi mouse (screen → world).
-        /// Return Vector2.zero jika mouse tidak tersedia / kamera tidak ada / posisi sama.
+        /// Titik tembak: FirePoint bila diisi, else tengah badan + MuzzleOffset.
         /// </summary>
-        private Vector2 GetMouseDirection()
+        private Vector2 GetMuzzlePosition()
         {
-            if (Camera.main == null) return Vector2.zero;
-
-            var mouse = Mouse.current;
-            if (mouse == null) return Vector2.zero;
-
-            Vector3 mouseScreen = mouse.position.ReadValue();
-
-            // Z yang dipakai ScreenToWorldPoint = jarak camera ke plane tempat player berdiri.
-            float zDist = FirePoint != null
-                ? FirePoint.position.z - Camera.main.transform.position.z
-                : -Camera.main.transform.position.z;
-
-            Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(
-                new Vector3(mouseScreen.x, mouseScreen.y, zDist));
-
-            Vector2 origin = FirePoint != null ? FirePoint.position : transform.position;
-            Vector2 dir = (Vector2)mouseWorld - origin;
-            if (dir.sqrMagnitude < 0.0001f) return Vector2.zero;
-            return dir.normalized;
+            if (FirePoint != null) return FirePoint.position;
+            return (Vector2)transform.position + MuzzleOffset;
         }
 
         /// <summary>
-        /// Satu burst = MultiShot proyektil dengan spread mengarah ke 'direction'.
+        /// Arah tembakan: ke kursor mouse bila ada mouse; else musuh terdekat (sentuh).
+        /// Return Vector2.zero bila tak ada arah valid (tahan tembakan).
         /// </summary>
-        private void FireBurst(Vector2 direction)
+        private Vector2 GetAimDirection(Vector2 origin)
         {
-            Vector2 origin = FirePoint != null ? FirePoint.position : transform.position;
+            var mouse = Mouse.current;
+            if (mouse != null && Camera.main != null)
+            {
+                Vector3 mouseScreen = mouse.position.ReadValue();
 
+                // Z yang dipakai ScreenToWorldPoint = jarak camera ke plane tempat player berdiri.
+                float zDist = transform.position.z - Camera.main.transform.position.z;
+
+                Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(
+                    new Vector3(mouseScreen.x, mouseScreen.y, zDist));
+
+                Vector2 d = (Vector2)mouseWorld - origin;
+                if (d.sqrMagnitude < 0.0001f) return Vector2.zero;
+                return d.normalized;
+            }
+
+            return GetAutoAimDirection(origin);
+        }
+
+        /// <summary>
+        /// Fallback sentuh: arah ke musuh terdekat dalam AimRadius (abaikan yang mati/nonaktif).
+        /// Hanya dipanggil saat tembakan siap (bukan tiap frame), jadi FindObjects di sini murah.
+        /// </summary>
+        private Vector2 GetAutoAimDirection(Vector2 origin)
+        {
+            EnemyAI nearest = null;
+            float bestSqr = AimRadius * AimRadius;
+            var enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+
+            for (int i = 0; i < enemies.Length; i++)
+            {
+                var enemy = enemies[i];
+                if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
+                if (enemy.Health != null && enemy.Health.IsDead) continue;
+
+                float sqr = (enemy.transform.position - transform.position).sqrMagnitude;
+                if (sqr > bestSqr) continue;
+
+                bestSqr = sqr;
+                nearest = enemy;
+            }
+
+            if (nearest == null) return Vector2.zero;
+
+            Vector2 d = (Vector2)nearest.transform.position - origin;
+            if (d.sqrMagnitude < 0.0001f) return Vector2.zero;
+            return d.normalized;
+        }
+
+        /// <summary>
+        /// Satu burst = MultiShot proyektil dengan spread mengarah ke 'direction', lahir di 'origin'.
+        /// </summary>
+        private void FireBurst(Vector2 origin, Vector2 direction)
+        {
             int count = Mathf.Max(1, _stats.MultiShot);
             for (int i = 0; i < count; i++)
             {
