@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c4a51e2bd7f048f9a3d6c1e5f7082946, type: 3}
   m_Name: Aelindra
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   Id: aelindra
   DisplayName: Aelindra
   Role: Swift Archer
@@ -21,7 +21,7 @@ MonoBehaviour:
   HP: 1200
   PhysicalAttack: 85
   PhysicalDefense: 40
-  AttackSpeed: 1.1
+  AttackSpeed: 2
   CritChance: 10
   Mana: 300
   MagicPower: 0
@@ -40,17 +40,17 @@ MonoBehaviour:
   IncomingHeal: 100
   Skill1:
     Name: Piercing Volley
-    Desc: Tembakan menembus 3 musuh. Damage +50% selama 3 detik. [Tombol 1]
+    Desc: 'Tembakan menembus 3 musuh. Damage +50% selama 3 detik. [Tombol 1]'
     Cooldown: 8
     Value: 1.5
   Skill2:
     Name: Multishot Surge
-    Desc: MultiShot +1 selama 5 detik. [Tombol 2]
+    Desc: 'MultiShot +1 selama 5 detik. [Tombol 2]'
     Cooldown: 12
     Value: 1
   Skill3:
     Name: Elven Blessing
-    Desc: Memulihkan 300 HP seketika. [Tombol 3]
+    Desc: 'Memulihkan 300 HP seketika. [Tombol 3]'
     Cooldown: 20
     Value: 300
   Passive:
