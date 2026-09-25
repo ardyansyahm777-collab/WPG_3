@@ -861,6 +861,23 @@ namespace WpgGame.UI
         private static int CountDetailRows(CharacterSelectController controller)
         {
             var so = new SerializedObject(controller);
+            // RenderShowcase menulis ke panel per-hero aktif (Showcase_Nama/...)
+            // bila ada, bukan ke legacy detailContent — hitung yang aktif agar
+            // validasi tetap PASS di scene yang sudah punya panel per-hero.
+            var showcasePanel = so.FindProperty("showcasePanel").objectReferenceValue as GameObject;
+            if (showcasePanel != null)
+            {
+                foreach (Transform child in showcasePanel.transform)
+                {
+                    if (child == null || !child.gameObject.activeSelf) continue;
+                    Transform dc = null;
+                    if (child.name.StartsWith("Showcase_"))
+                        dc = child.Find("DetailScroll/Viewport/DetailContent");
+                    else if (child.name == "DetailScroll")
+                        dc = child.Find("Viewport/DetailContent");
+                    if (dc != null) return dc.childCount;
+                }
+            }
             var content = so.FindProperty("detailContent").objectReferenceValue as Transform;
             if (content == null)
             {

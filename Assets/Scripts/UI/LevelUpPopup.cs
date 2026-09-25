@@ -81,6 +81,7 @@ namespace WpgGame.UI
 
                 Button btn = Instantiate(choiceTemplate, choicesContainer);
                 btn.gameObject.SetActive(true);
+                WpgGame.Core.RuntimeSpawnTag.Tag(btn.gameObject, "WpgGame.UI.LevelUpPopup.HandleLevelUp", "LevelUp choiceTemplate");
 
                 TMP_Text[] texts = btn.GetComponentsInChildren<TMP_Text>(true);
                 if (texts.Length >= 2)

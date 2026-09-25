@@ -53,6 +53,7 @@ namespace WpgGame.Core
 
             var root = new GameObject("[Pool] " + prefab.name);
             pool = root.AddComponent<PrefabPool>();
+            RuntimeSpawnTag.Tag(root, "WpgGame.Core.PrefabPool.GetOrCreate", prefab.name);
             pool.Prefab = prefab;
             pool.InitialSize = Mathf.Max(0, initialSize);
             pool.MaxSize = Mathf.Max(1, maxSize);
@@ -72,6 +73,7 @@ namespace WpgGame.Core
             var go = Instantiate(Prefab);
             TotalInstantiated++;
             go.name = Prefab.name;
+            RuntimeSpawnTag.Tag(go, "WpgGame.Core.PrefabPool.CreateInstance", Prefab != null ? Prefab.name : string.Empty);
             var pooled = go.GetComponent<PooledObject>();
             if (pooled == null) pooled = go.AddComponent<PooledObject>();
             pooled.HomePool = this;

@@ -45,6 +45,7 @@ namespace WpgGame.Core
             if (GameManager.Instance != null) return;
             var go = new GameObject("[GameManager]");
             go.AddComponent<GameManager>();
+            RuntimeSpawnTag.Tag(go, "WpgGame.Core.SceneSetup.EnsureGameManager");
         }
 
         private static void EnsureEventSystem()
@@ -57,6 +58,7 @@ namespace WpgGame.Core
                 // Pakai InputSystemUIInputModule agar cocok dengan paket com.unity.inputsystem.
                 existing = go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>()
                     .GetComponent<UnityEngine.EventSystems.EventSystem>();
+                RuntimeSpawnTag.Tag(go, "WpgGame.Core.SceneSetup.EnsureEventSystem");
             }
             EnsureUiActions(existing);
         }
@@ -103,6 +105,7 @@ namespace WpgGame.Core
                 c.backgroundColor = new Color(0.1f, 0.1f, 0.12f, 1f);
                 c.clearFlags = CameraClearFlags.SolidColor;
                 go.AddComponent<AudioListener>();
+                RuntimeSpawnTag.Tag(go, "WpgGame.Core.SceneSetup.EnsureMainCamera");
                 cam = c;
             }
             // Kamera follow player: pastikan komponennya ada (target di-resolve otomatis

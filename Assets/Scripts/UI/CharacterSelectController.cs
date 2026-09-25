@@ -366,6 +366,7 @@ namespace WpgGame.UI
                 if (card == null)
                 {
                     card = Instantiate(cardPrefab, cardGrid);
+                    WpgGame.Core.RuntimeSpawnTag.Tag(card.gameObject, "WpgGame.UI.CharacterSelectController.RenderCards", "CardTemplate");
                 }
 
                 card.gameObject.SetActive(true);
@@ -1027,6 +1028,7 @@ namespace WpgGame.UI
                 GameObject row = Instantiate(statRowPrefab, content);
                 row.SetActive(true);
                 row.name = "Row_" + title;
+                WpgGame.Core.RuntimeSpawnTag.Tag(row, "WpgGame.UI.CharacterSelectController.AddRow", "Assets/Prefabs/UI/StatRow.prefab");
 
                 TMP_Text[] texts = row.GetComponentsInChildren<TMP_Text>(true);
                 if (texts.Length >= 2)
@@ -1048,6 +1050,7 @@ namespace WpgGame.UI
             // tanpa nested layout (anti-fragile terhadap preferred-size TMP).
             GameObject go = new GameObject("Row_" + title, typeof(RectTransform));
             go.transform.SetParent(content, false);
+            WpgGame.Core.RuntimeSpawnTag.Tag(go, "WpgGame.UI.CharacterSelectController.AddRow (code fallback)");
 
             TMP_Text tmp = StretchText(go,
                 "<color=#94A3B8>" + title + ":</color>  <b>" + value + "</b>",
@@ -1071,6 +1074,7 @@ namespace WpgGame.UI
                 GameObject row = Instantiate(proto, content);
                 row.SetActive(true);
                 row.name = "Row_" + title;
+                WpgGame.Core.RuntimeSpawnTag.Tag(row, "WpgGame.UI.CharacterSelectController.AddParagraph", "Assets/Prefabs/UI/ParaRow.prefab");
 
                 TMP_Text[] texts = row.GetComponentsInChildren<TMP_Text>(true);
                 if (texts.Length >= 2)
@@ -1089,6 +1093,7 @@ namespace WpgGame.UI
 
             GameObject go = new GameObject("Row_" + title, typeof(RectTransform));
             go.transform.SetParent(content, false);
+            WpgGame.Core.RuntimeSpawnTag.Tag(go, "WpgGame.UI.CharacterSelectController.AddParagraph (code fallback)");
 
             // Satu TMP full-rect fixed-height: judul aksen cyan + isi. Tinggi dikunci agar
             // tidak bergantung preferred-size (lihat FixRowHeight).
