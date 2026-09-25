@@ -6,31 +6,37 @@
 
 Game top-down shooter survival roguelike untuk **PC (keyboard + mouse)** dan **Mobile (touch)**.
 
-- **Engine**: Unity 6.6.0f1 + URP 2D + Input System + TextMeshPro
+- **Engine**: Unity **6000.6.0f1** + URP 2D + Input System + TextMeshPro
 - **Target build**: Android (touch) + Windows Standalone
 - **Orientasi**: Landscape 16:9
-- **Judul sementara**: "Bhagas Naksir Dipta" (placeholder)
-- **Aset**: Semua placeholder shape 2D untuk saat ini; art menyusul
+- **Judul kerja**: WPG_3 (placeholder lama: "Bhagas Naksir Dipta")
+- **Aset**: Sebagian besar placeholder shape 2D; art final menyusul
+- **Scene**: `Main Menu.unity` (pilih hero) + `Main.unity` (gameplay, sengaja minimal — runtime bootstrap)
 
-## Struktur Folder
+Dokumen terkait: `AGENTS.md` (aturan kerja + konvensi), `Assets/Scripts/API_CONTRACTS.md` (kontrak API — baca dulu sebelum ngoding), `RUNTIME_MAP.md` (peta hierarchy play-mode → sumber kode), `docs/superpowers/specs/2026-09-25-wpg3-runtime-traceability-design.md` (spec traceability).
+
+## Struktur Folder (aktual)
 
 ```
 Assets/
-  Scenes/Main.unity          # Scene utama (sudah jadi entry scene)
-  Settings/                  # URP asset + Input System actions (jangan diedit kecuali perlu)
+  Scenes/Main Menu.unity        # Pilih hero (MenuUI + CharacterSelect)
+  Scenes/Main.unity             # Gameplay (sengaja minimal — runtime bootstrap)
+  Settings/                     # URP asset + InputSystem_Actions (jangan buat asset baru)
   Scripts/
-    WPG_3.Scripts.asmdef     # Asmdef runtime
-    Core/                    # GameManager, GameEvents, SceneSetup (SINGLE SOURCE OF TRUTH)
-    Player/                  # PlayerController, AutoAimShooter, PlayerStats  (Prog 1)
-    Combat/                  # HealthSystem, Projectile                        (Prog 1)
-    Enemy/                   # EnemyAI, EnemySpawner                           (Prog 1)
-    Progression/             # LevelUpSystem, UpgradeSystem, UpgradeOption     (Prog 2)
-    Economy/                 # GoldManager                                      (Prog 2)
-    UI/                      # HUD, LevelUpPopup, GameOverScreen, VirtualJoystick (Prog 3)
-    API_CONTRACTS.md         # KONTRAK API — BACA DULU SEBELUM NGODING
-  Editor/                    # WPG_3.Editor.asmdef + SceneBootstrap.cs
-  Data/UpgradeOptions/       # ScriptableObject upgrade samples
-  Prefabs/                   # Prefab player, enemy, projectile, UI
+    WPG_3.Scripts.asmdef        # Asmdef runtime (namespace WpgGame.*)
+    API_CONTRACTS.md            # KONTRAK API — BACA DULU SEBELUM NGODING
+    Core/                       # GameManager, GameEvents, SceneSetup, PrefabPool, CameraFollow, RuntimeSpawnTag
+    Player/                     # PlayerController, PlayerStats, AutoAimShooter, HeroSkill, CharacterData, GameplaySetup
+    Combat/                     # HealthSystem, Projectile
+    Enemy/                      # EnemyAI, EnemySpawner
+    Progression/                # LevelUpSystem, UpgradeSystem, UpgradeOption, ExpGem, RewardRouter
+    Economy/                    # GoldManager, GoldCoin
+    UI/                         # HUD, LevelUpPopup, GameOverScreen, CharacterSelect*, MainMenuController, FloatingObject
+  Editor/                       # WPG_3.Editor.asmdef + SceneBootstrap, CharacterSelectBootstrap, RuntimeSourceLogger, Builder tools
+  Data/Characters/              # 4 hero (Aelindra unlocked, Bram/Circe/Dain locked)
+  Data/UpgradeOptions/          # ScriptableObject upgrade samples
+  Prefabs/                      # Player, Enemy, Projectile, GameManager, EventSystem, Systems
+  Prefabs/UI/                   # HUD, LevelUpPopup, GameOverScreen, StatRow, ParaRow
 ```
 
 ## Tim & Peran (3 Programmer)
@@ -57,14 +63,42 @@ Assets/
 1. Buka **Unity Hub** → Add project → pilih folder `D:\Me\Unity_Project\WPG_3`.
 2. Pastikan **Editor version: 6000.6.0f1**.
 3. Klik **Open** dan tunggu Unity selesai compile.
-4. Buka scene `Assets/Scenes/Main.unity`.
+4. Buka scene `Assets/Scenes/Main Menu.unity` untuk alur pilih hero, atau `Assets/Scenes/Main.unity` untuk langsung gameplay.
 5. Klik **Play** untuk tes.
+
+## Runtime vs Edit-mode (penting!)
+
+Scene sengaja minimal. Saat Play, objek dibuat otomatis via kode:
+
+- `SceneSetup.cs` → `[GameManager]`, `[EventSystem]`, `[Main Camera]`
+- `GameplaySetup.cs` → `Player`, `EnemyTemplate`, `ProjectileTemplate`, `[EnemySpawner]`
+- `PrefabPool.cs` → `[Pool] ...` + musuh/proyektil hidup
+- `CharacterSelectController.cs` → `Card_*`, `Row_*` (dari prefab `StatRow`/`ParaRow`)
+- `LevelUpPopup.cs` → tombol pilihan upgrade
+
+**Isi `DetailContent`/grid SELALU kosong di edit-mode** — baris lahir dari kode + prefab, musnah saat Stop. Jangan edit manual di play-mode (tidak tersimpan).
+
+Cara melacak objek asing saat Play:
+
+1. Klik objek di Hierarchy → Inspector → komponen `RuntimeSpawnTag` → baca `SourceScript` / `PrefabPath`.
+2. Atau jalankan `Tools/WPG_3/Log Runtime Source` → baca Console.
+3. Ubah sumbernya (kode/prefab di `RUNTIME_MAP.md`), bukan objek play-mode-nya.
+4. Validasi: `Tools/WPG_3/Validate Slice` → `[SliceCheck] ... PASS`, scene tersimpan bersih (panel nonaktif, tanpa sisa objek runtime).
+
+## Tooling Editor
+
+- `Tools/WPG_3/Bootstrap Main Scene` — pastikan `Main.unity` punya GameManager.
+- `Tools/WPG_3/Bootstrap Gameplay Objects` — buat Player/template/spawner di scene aktif (edit-mode).
+- `Tools/WPG_3/Build Character Select UI` — bangun hierarchy Character Select (idempoten).
+- `Tools/WPG_3/Log Runtime Source` — petakan hierarchy terlihat → sumber kode (read-only).
+- `Tools/WPG_3/Validate Slice` (+ `Tab/Go/Main`) — cek menu 4 kartu, 20/3/1 baris, alur Main.
 
 ## Catatan Penting
 
-- Scene sudah auto-bootstrap `GameManager`, `EventSystem`, dan `Main Camera` lewat `SceneSetup.cs` (runtime). Tidak perlu drag prefab manual.
-- Untuk setup tambahan (mis. menambah `GameManager` component di scene), bisa pakai menu **Tools > WPG_3 > Bootstrap Main Scene**.
-- `InputSystem_Actions.inputactions` sudah ter-setup dengan action `Player/Move` (Vector2) dan `Player/Attack` (Button). Pakai ini — jangan buat asset baru.
+- Scene auto-bootstrap `GameManager`, `EventSystem`, dan `Main Camera` lewat `SceneSetup.cs` (runtime). Tidak perlu drag prefab manual.
+- `InputSystem_Actions.inputactions` sudah ter-setup: `Player/Move`, `Player/Attack`, `Player/Skill1|2|3` (= 1/2/3), `Player/Previous|Next` (= Q/E), `UI/Submit`, `UI/Cancel`. Pakai ini — jangan buat asset baru.
+- Hero terpilih: `PlayerPrefs "wpg3_hero"` + `GameplaySetup.PendingCharacter` (referensi langsung antar-scene, tanpa folder Resources).
+- Jangan hand-edit YAML `.unity`/`.prefab`: drive Editor via `unity-cli` atau skrip bootstrap (`Tools/WPG_3/...`).
 
 ## Lisensi
 
