@@ -31,7 +31,7 @@ MonoBehaviour:
   HPRegen: 8
   PhysicalPEN: 0
   Lifesteal: 0
-  BasicAttackRange: 5.5
+  BasicAttackRange: 0.5
   CritDamage: 200
   HealEffect: 100
   ManaRegen: 5
