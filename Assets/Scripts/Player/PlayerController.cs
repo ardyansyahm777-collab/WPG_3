@@ -56,6 +56,17 @@ namespace WpgGame.Player
         {
             if (rb == null || stats == null) return;
 
+            // Beku (pause/level-up/game over): nol-kan gerak + tidurkan body agar
+            // solver fisika melewatinya (tumpukan musuh di atas player tetap diselesaikan
+            // tiap FixedUpdate walau velocity nol — sumber kipas saat popup terbuka).
+            if (IsInputLocked())
+            {
+                rb.linearVelocity = Vector2.zero;
+                if (!rb.IsSleeping()) rb.Sleep();
+                return;
+            }
+            if (rb.IsSleeping()) rb.WakeUp();
+
             Vector2 input = Vector2.zero;
             if (moveAction != null)
             {
@@ -69,8 +80,6 @@ namespace WpgGame.Player
 
             // Cap di 1 untuk diagonal (WASD), tapi tetap mempertahankan analog parsial touch joystick.
             input = Vector2.ClampMagnitude(input, 1f);
-
-            if (IsInputLocked()) input = Vector2.zero;
 
             rb.linearVelocity = input * stats.MoveSpeed;
         }
