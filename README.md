@@ -13,7 +13,7 @@ Game top-down shooter survival roguelike untuk **PC (keyboard + mouse)** dan **M
 - **Aset**: Sebagian besar placeholder shape 2D; art final menyusul
 - **Scene**: `Main Menu.unity` (pilih hero) + `Main.unity` (gameplay, sengaja minimal — runtime bootstrap)
 
-Dokumen terkait: `AGENTS.md` (aturan kerja + konvensi), `Assets/Scripts/API_CONTRACTS.md` (kontrak API — baca dulu sebelum ngoding), `RUNTIME_MAP.md` (peta hierarchy play-mode → sumber kode), `docs/superpowers/specs/2026-09-25-wpg3-runtime-traceability-design.md` (spec traceability).
+Dokumen terkait: `AGENTS.md` (aturan kerja + konvensi), `Assets/Scripts/API_CONTRACTS.md` (kontrak API — baca dulu sebelum ngoding), `RUNTIME_MAP.md` (peta hierarchy play-mode → sumber kode).
 
 ## Struktur Folder (aktual)
 
