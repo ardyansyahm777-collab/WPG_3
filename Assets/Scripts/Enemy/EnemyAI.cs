@@ -34,6 +34,10 @@ namespace WpgGame.Enemy
         private Transform _player;
         private float _nextContactTime;
 
+        // Cache sekali: cek layer jauh lebih murah dari GetComponentInParent per kontak.
+        // int.MinValue = belum di-resolve. <0 = layer tak terdaftar → lewati cek layer.
+        private static int _playerLayer = int.MinValue;
+
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
@@ -69,11 +73,16 @@ namespace WpgGame.Enemy
             if (_rb == null || Health == null || Health.IsDead) return;
 
             // Freeze saat state bukan Playing (mis. popup LevelUp): diam, jangan kejar player.
+            // Tidurkan body: solver fisika melewati body tidur, jadi 40 musuh yang
+            // menumpuk di atas player tidak diselesaikan tiap FixedUpdate walau
+            // velocity sudah nol (inilah yang bikin kipas meraung saat popup terbuka).
             if (IsGameplayFrozen())
             {
                 _rb.linearVelocity = Vector2.zero;
+                if (!_rb.IsSleeping()) _rb.Sleep();
                 return;
             }
+            if (_rb.IsSleeping()) _rb.WakeUp();
 
             if (_player == null)
             {
@@ -101,16 +110,20 @@ namespace WpgGame.Enemy
             TryContact(collision.collider);
         }
 
-        private void OnCollisionStay2D(Collision2D collision)
-        {
-            TryContact(collision.collider);
-        }
+        // OnCollisionStay2D SENGAJA dihapus: tiap physics-step memanggil
+        // GetComponentInParent (mahal) untuk tiap pasangan bersentuhan. Saat musuh
+        // menumpuk (40 hidup), ini badai O(n²) → kipas naik. Cooldown
+        // _nextContactTime + Enter sudah cukup untuk damage per kontak.
 
         private void TryContact(Collider2D other)
         {
             // Freeze saat state bukan Playing: tidak memberi contact damage.
             if (IsGameplayFrozen()) return;
             if (other == null || Time.time < _nextContactTime) return;
+            // Early-out murah sebelum GetComponentInParent (traversal mahal):
+            // sebagian besar kontak adalah musuh-vs-musuh, langsung buang via layer.
+            if (_playerLayer == int.MinValue) _playerLayer = LayerMask.NameToLayer("PG_Player");
+            if (_playerLayer >= 0 && other.gameObject.layer != _playerLayer) return;
             if (other.GetComponentInParent<PlayerStats>() == null) return;
 
             var playerHealth = other.GetComponentInParent<HealthSystem>();
