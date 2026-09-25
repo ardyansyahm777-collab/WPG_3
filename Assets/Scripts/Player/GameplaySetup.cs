@@ -38,6 +38,7 @@ namespace WpgGame.Player
             {
                 var go = new GameObject("[EnemySpawner]");
                 spawner = go.AddComponent<EnemySpawner>();
+                Core.RuntimeSpawnTag.Tag(go, "WpgGame.Player.GameplaySetup.MenuBootstrap");
             }
             if (spawner.EnemyPrefab == null) spawner.EnemyPrefab = GetOrCreateEnemyTemplate();
             if (spawner.Player == null && _player != null) spawner.Player = _player.transform;
@@ -88,10 +89,26 @@ namespace WpgGame.Player
             {
                 var go = new GameObject("[EnemySpawner]");
                 spawner = go.AddComponent<EnemySpawner>();
+                Core.RuntimeSpawnTag.Tag(go, "WpgGame.Player.GameplaySetup.OnSceneLoaded");
             }
             if (spawner.EnemyPrefab == null) spawner.EnemyPrefab = GetOrCreateEnemyTemplate();
             if (spawner.Player == null && player != null) spawner.Player = player.transform;
+            EnsureEnemyCollisionMatrix();
             spawner.StartSpawning();
+        }
+
+        /// <summary>
+        /// Matikan tabrakan musuh-vs-musuh: solver fisika O(n²) saat 40 musuh hidup
+        /// menumpuk adalah sumber utama kipas naik. Contact damage ke player tetap jalan
+        /// (layer PG_Player tidak disentuh). Guard: hanya bila layer PG_Enemy terdaftar —
+        /// tanpa guard, fallback ResolveLayer=0 (Default) akan mematikan tabrakan
+        /// Default-vs-Default global.
+        /// </summary>
+        private static void EnsureEnemyCollisionMatrix()
+        {
+            int enemyLayer = LayerMask.NameToLayer("PG_Enemy");
+            if (enemyLayer < 0) return;
+            Physics2D.IgnoreLayerCollision(enemyLayer, enemyLayer, true);
         }
 
         public static GameObject GetOrCreatePlayer()
@@ -191,7 +208,9 @@ namespace WpgGame.Player
             var rb = go.GetComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.gravityScale = 0f;
-            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            // Discrete: kecepatan 5 u/detik tak butuh Continuous (mahal); anti-tunneling
+            // tak relevan untuk gerak player top-down.
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
 
             var col = go.GetComponent<CircleCollider2D>();
@@ -207,6 +226,7 @@ namespace WpgGame.Player
             stats.Damage = 85f;
             stats.MultiShot = 1;
 
+            Core.RuntimeSpawnTag.Tag(go, "WpgGame.Player.GameplaySetup.CreatePlayer");
             return go;
         }
 
@@ -229,7 +249,9 @@ namespace WpgGame.Player
             var rb = go.GetComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.gravityScale = 0f;
-            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            // Discrete: kecepatan kejar 2 u/detik tak butuh Continuous (mahal per-body
+            // per-step; menumpuk saat 40 musuh hidup).
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
 
             var col = go.GetComponent<BoxCollider2D>();
@@ -243,6 +265,7 @@ namespace WpgGame.Player
             ai.ContactDamage = 1f;
 
             go.SetActive(false);
+            Core.RuntimeSpawnTag.Tag(go, "WpgGame.Player.GameplaySetup.CreateEnemyTemplate");
             return go;
         }
 
@@ -278,6 +301,7 @@ namespace WpgGame.Player
             projectile.HitMask = enemyLayer >= 0 ? 1 << enemyLayer : ~0;
 
             go.SetActive(false);
+            Core.RuntimeSpawnTag.Tag(go, "WpgGame.Player.GameplaySetup.CreateProjectileTemplate");
             return go;
         }
 
