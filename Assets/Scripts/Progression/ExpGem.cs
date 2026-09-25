@@ -11,9 +11,12 @@ namespace WpgGame.Progression
     public class ExpGem : MonoBehaviour
     {
         [SerializeField] private float expAmount = 10f;
-        [SerializeField] private float magnetRadius = 3f;
+        [SerializeField] private float magnetRadius = 4.5f;
         [SerializeField] private float collectRadius = 0.6f;
         [SerializeField] private float moveSpeed = 6f;
+
+        [Tooltip("Umur maksimum pickup (detik) sebelum despawn sendiri agar tidak menumpuk bila tak dipungut.")]
+        [SerializeField] private float lifetime = 25f;
 
         public float ExpAmount
         {
@@ -40,12 +43,19 @@ namespace WpgGame.Progression
         }
 
         private Transform _player;
+        private float _age;
 
         private static Sprite _cachedSprite;
 
         private void Awake()
         {
             EnsureVisual();
+        }
+
+        private void OnEnable()
+        {
+            // Instance pool dipakai ulang: reset umur agar lifetime dihitung per-spawn.
+            _age = 0f;
         }
 
         private void Update()
@@ -57,19 +67,30 @@ namespace WpgGame.Progression
             if (gm != null && gm.State != GameManager.GameState.Playing)
                 return;
 
-            Vector3 target = _player.position;
-            float dist = Vector3.Distance(transform.position, target);
+            // Lifetime bounded: yang tak dipungut hilang sendiri (hindari puluhan
+            // Update/frame menumpuk). Hanya tick saat Playing agar tak hilang selagi popup.
+            _age += Time.deltaTime;
+            if (_age >= Mathf.Max(1f, lifetime))
+            {
+                PrefabPool.Despawn(gameObject);
+                return;
+            }
 
-            if (dist <= collectRadius)
+            Vector3 target = _player.position;
+            float sqr = (transform.position - target).sqrMagnitude; // tanpa sqrt
+            float collectSqr = collectRadius * collectRadius;
+
+            if (sqr <= collectSqr)
             {
                 Collect();
                 return;
             }
 
-            if (dist <= magnetRadius)
+            float magnetSqr = magnetRadius * magnetRadius;
+            if (sqr <= magnetSqr)
             {
                 transform.position = Vector3.MoveTowards(transform.position, target, moveSpeed * Time.deltaTime);
-                if (Vector3.Distance(transform.position, target) <= collectRadius)
+                if ((transform.position - target).sqrMagnitude <= collectSqr)
                     Collect();
             }
         }
@@ -107,11 +128,10 @@ namespace WpgGame.Progression
             renderer.sprite = GetOrCreateGemSprite();
             renderer.sortingOrder = 2;
 
-            var col = GetComponent<CircleCollider2D>();
-            if (col == null)
-                col = gameObject.AddComponent<CircleCollider2D>();
-            col.isTrigger = true;
-            col.radius = 0.4f;
+            // Collider trigger TIDAK dipakai (collect via cek jarak di Update) — tiap pickup
+            // yang punya collider ikut broadphase fisika. Musnahkan bila terbawa template lama.
+            var stale = GetComponent<CircleCollider2D>();
+            if (stale != null) Destroy(stale);
         }
 
         private static Sprite GetOrCreateGemSprite()
