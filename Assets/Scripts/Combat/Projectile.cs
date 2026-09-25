@@ -52,6 +52,8 @@ namespace WpgGame.Combat
             _lifeTimer = 0f;
             if (_rb != null)
             {
+                // Bisa tertidur bila di-spawn selagi beku lalu langsung dipakai saat Playing.
+                if (_rb.IsSleeping()) _rb.WakeUp();
                 _rb.linearVelocity = _direction * Speed;
             }
         }
@@ -60,12 +62,14 @@ namespace WpgGame.Combat
         {
             // Freeze saat state bukan Playing (mis. popup LevelUp): diam di tempat,
             // lifetime TIDAK berkurang agar tembakan tidak hilang sia-sia selama freeze.
+            // Tidurkan body agar solver melewatinya (lihat EnemyAI).
             if (IsGameplayFrozen())
             {
                 if (_rb != null && _rb.linearVelocity != Vector2.zero)
                 {
                     _rb.linearVelocity = Vector2.zero;
                 }
+                if (_rb != null && !_rb.IsSleeping()) _rb.Sleep();
                 return;
             }
 
@@ -73,6 +77,7 @@ namespace WpgGame.Combat
             if (_rb != null && _direction.sqrMagnitude > 0.0001f
                 && _rb.linearVelocity.sqrMagnitude < 0.0001f)
             {
+                if (_rb.IsSleeping()) _rb.WakeUp();
                 _rb.linearVelocity = _direction * Speed;
             }
 
