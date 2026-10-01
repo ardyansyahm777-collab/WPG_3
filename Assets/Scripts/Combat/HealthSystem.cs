@@ -7,6 +7,7 @@ namespace WpgGame.Combat
     /// Komponen HP reusable untuk Player dan Enemy.
     /// Broadcast OnHealthChanged(current, max) setiap HP berubah, dan OnDeath sekali saat HP habis.
     /// Dipanggil lewat TakeDamage (serangan/enemy contact) dan Heal (upgrade/regen).
+    /// testingm
     /// </summary>
     public class HealthSystem : MonoBehaviour
     {
