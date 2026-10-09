@@ -24,6 +24,9 @@ namespace WpgGame.Enemy
         [Tooltip("Cooldown (detik) antar setiap kontak damage.")]
         public float ContactInterval = 0.5f;
 
+        [Tooltip("True = boss: melewati barier Aelindra (tidak ditahan). Default false.")]
+        public bool IsBoss = false;
+
         [Tooltip("Referensi HealthSystem musuh (otomatis didapat via GetComponent).")]
         public HealthSystem Health;
 

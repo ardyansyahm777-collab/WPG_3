@@ -17,7 +17,8 @@ namespace WpgGame.Core
             Playing,
             Paused,
             LevelUp,
-            GameOver
+            GameOver,
+            Victory
         }
 
         [Tooltip("State awal saat game mulai.")]

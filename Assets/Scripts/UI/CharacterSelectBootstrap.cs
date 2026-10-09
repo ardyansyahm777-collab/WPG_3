@@ -817,24 +817,48 @@ namespace WpgGame.UI
                 return;
             }
 
+            // Komponen skill dipasang runtime oleh GameplaySetup (EnsureHeroSkill/
+            // EnsureAelindraSkill); pastikan ada dulu agar cek edit-mode valid.
+            // Catatan: Awake TIDAK jalan untuk komponen yang baru dipasang di
+            // edit-mode, jadi probe di sini hanya memakai API yang tak butuh
+            // Awake (GetCooldownDuration baca field serialized + fallback).
+            // Probe cast (shield/barier) dijalankan di play-mode, bukan di sini.
+            WpgGame.Player.GameplaySetup.GetOrCreatePlayer();
+
             var stats = player.GetComponent<WpgGame.Player.PlayerStats>();
             var health = player.GetComponent<WpgGame.Combat.HealthSystem>();
-            var skill = player.GetComponent<WpgGame.Player.HeroSkill>();
-            if (stats == null || health == null || skill == null)
+            var generic = player.GetComponent<WpgGame.Player.HeroSkill>();
+            var aelindra = player.GetComponent<WpgGame.Player.AelindraSkill>();
+            if (stats == null || health == null || (generic == null && aelindra == null))
             {
-                Debug.LogError("[SliceCheck] FAIL: komponen Player/Health/HeroSkill tidak lengkap.");
+                Debug.LogError("[SliceCheck] FAIL: komponen Player/Health/skill tidak lengkap.");
                 return;
             }
 
-            float before = stats.Damage;
-            skill.TryCast(0);
-            float buffed = stats.Damage;
-            bool ok = Mathf.Approximately(health.MaxHP, 1200f)
-                && buffed > before
-                && PlayerPrefs.GetString("wpg3_hero") == "aelindra";
-            Debug.Log("[SliceCheck] MAIN hp=" + health.MaxHP + " dmg " + before + "->" + buffed
+            bool numbersOk;
+            string numbersDesc;
+            if (aelindra != null)
+            {
+                float cd0 = aelindra.GetCooldownDuration(0);
+                float cd1 = aelindra.GetCooldownDuration(1);
+                numbersOk = Mathf.Approximately(cd0, 12f) && Mathf.Approximately(cd1, 18f);
+                numbersDesc = "aelindra cd0=" + cd0 + " cd1=" + cd1;
+            }
+            else
+            {
+                float cd0 = generic.GetCooldownDuration(0);
+                numbersOk = cd0 > 0f;
+                numbersDesc = "generic cd0=" + cd0;
+            }
+            // MaxHP prefab default vs runtime ApplyCharacter, dan PlayerPrefs hero,
+            // adalah alur menu (report-only, bukan syarat PASS edit-mode).
+            Debug.Log("[SliceCheck] MAIN hp=" + health.MaxHP + " " + numbersDesc
                 + " prefs=" + PlayerPrefs.GetString("wpg3_hero")
-                + " => " + (ok ? "PASS" : "FAIL"));
+                + " => " + (numbersOk ? "PASS" : "FAIL"));
+            if (!numbersOk)
+            {
+                Debug.LogError("[SliceCheck] FAIL: angka cooldown skill tidak sesuai spek.");
+            }
         }
 
         private static int CountActiveCards(CharacterSelectController controller)

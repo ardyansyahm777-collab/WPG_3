@@ -22,6 +22,7 @@ namespace WpgGame.Core
 
         // --- Game state ---
         public static event Action OnGameOver;
+        public static event Action OnVictory;
 
         // --- Helper untuk raise (agar penamaan konsisten) ---
         public static void RaiseEnemyKilled(GameObject enemy) => OnEnemyKilled?.Invoke(enemy);
@@ -30,6 +31,7 @@ namespace WpgGame.Core
         public static void RaiseLevelUp() => OnLevelUp?.Invoke();
         public static void RaiseGoldChanged(int total) => OnGoldChanged?.Invoke(total);
         public static void RaiseGameOver() => OnGameOver?.Invoke();
+        public static void RaiseVictory() => OnVictory?.Invoke();
 
         // --- Cleanup saat restart/load scene ---
         public static void ClearAll()
@@ -40,6 +42,7 @@ namespace WpgGame.Core
             OnLevelUp = null;
             OnGoldChanged = null;
             OnGameOver = null;
+            OnVictory = null;
         }
     }
 }

@@ -120,21 +120,35 @@ namespace WpgGame.Player
             }
             EnsurePlayerDeathSubscription(_player);
             EnsureHeroSkill(_player);
+            EnsureAelindraSkill(_player);
             return _player;
         }
 
         /// <summary>
         /// Terapkan PendingCharacter (dari Character Select) ke Player:
-        /// ApplyCharacter + set HeroSkill.Character. Dipanggil tiap scene Main dimuat
-        /// (PendingCharacter dipertahankan agar Restart tetap pakai hero yang sama).
+        /// ApplyCharacter + set Character di kedua sistem skill, lalu aktifkan
+        /// HANYA satu: AelindraSkill bila hero Aelindra (atau default saat
+        /// PendingCharacter null), else HeroSkill generik. Mencegah double-cast
+        /// tombol 1/2 oleh dua sistem sekaligus.
         /// </summary>
         private static void ApplyPendingHero(GameObject player)
         {
-            if (player == null || PendingCharacter == null) return;
-            var stats = player.GetComponent<PlayerStats>();
-            if (stats != null) stats.ApplyCharacter(PendingCharacter);
+            if (player == null) return;
+            EnsureAelindraSkill(player);
+
+            if (PendingCharacter != null)
+            {
+                var stats = player.GetComponent<PlayerStats>();
+                if (stats != null) stats.ApplyCharacter(PendingCharacter);
+            }
             var skill = player.GetComponent<HeroSkill>();
             if (skill != null) skill.Character = PendingCharacter;
+            var aelindra = player.GetComponent<AelindraSkill>();
+            if (aelindra != null) aelindra.Character = PendingCharacter;
+
+            bool isAelindra = PendingCharacter == null || PendingCharacter.Id == "aelindra";
+            if (skill != null) skill.enabled = !isAelindra;
+            if (aelindra != null) aelindra.enabled = isAelindra;
         }
 
         /// <summary>
@@ -157,6 +171,19 @@ namespace WpgGame.Player
             if (player.GetComponent<HeroSkill>() == null)
             {
                 player.AddComponent<HeroSkill>();
+            }
+        }
+
+        /// <summary>
+        /// Pastikan kit khusus Aelindra terpasang (dipilih-aktif via ApplyPendingHero).
+        /// Cermin EnsureHeroSkill; deterministik + tahan restart (tanpa edit prefab YAML).
+        /// </summary>
+        private static void EnsureAelindraSkill(GameObject player)
+        {
+            if (player == null) return;
+            if (player.GetComponent<AelindraSkill>() == null)
+            {
+                player.AddComponent<AelindraSkill>();
             }
         }
 
@@ -195,6 +222,7 @@ namespace WpgGame.Player
                 typeof(PlayerStats),
                 typeof(PlayerController),
                 typeof(HeroSkill),
+                typeof(AelindraSkill),
                 typeof(AutoAimShooter));
 
             go.layer = ResolveLayer("PG_Player");

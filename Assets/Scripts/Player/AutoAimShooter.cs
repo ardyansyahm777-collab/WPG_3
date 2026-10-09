@@ -35,6 +35,9 @@ namespace WpgGame.Player
         [Tooltip("Jika true dan ProjectilePrefab kosong, buat template placeholder otomatis saat Awake.")]
         public bool AutoCreateProjectile = true;
 
+        /// <summary>Waktu (Time.time) tembakan terakhir. -100 = belum pernah menembak.</summary>
+        public float LastShotTime { get; private set; } = -100f;
+
         private PlayerStats _stats;
         private float _cooldown;
 
@@ -174,6 +177,7 @@ namespace WpgGame.Player
                     projectile.Launch(dir);
                 }
             }
+            LastShotTime = Time.time;
         }
 
         private static Vector2 Rotate(Vector2 v, float radians)

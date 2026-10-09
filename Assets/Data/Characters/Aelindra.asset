@@ -21,7 +21,7 @@ MonoBehaviour:
   HP: 1200
   PhysicalAttack: 85
   PhysicalDefense: 40
-  AttackSpeed: 2
+  AttackSpeed: 0.5
   CritChance: 10
   Mana: 300
   MagicPower: 0
@@ -39,21 +39,21 @@ MonoBehaviour:
   SpellVamp: 0
   IncomingHeal: 100
   Skill1:
-    Name: Piercing Volley
-    Desc: 'Tembakan menembus 3 musuh. Damage +50% selama 3 detik. [Tombol 1]'
-    Cooldown: 8
-    Value: 1.5
-  Skill2:
-    Name: Multishot Surge
-    Desc: 'MultiShot +1 selama 5 detik. [Tombol 2]'
+    Name: Storm Shield
+    Desc: 'Shield sebesar 30% MaxHP selama 5 detik, menyerap damage sebelum HP. [Tombol 1]'
     Cooldown: 12
-    Value: 1
+    Value: 30
+  Skill2:
+    Name: Static Barrier
+    Desc: 'Barier lingkaran radius 3 di titik cast selama 6 detik, menahan musuh kecuali boss. [Tombol 2]'
+    Cooldown: 18
+    Value: 3
   Skill3:
     Name: Elven Blessing
     Desc: 'Memulihkan 300 HP seketika. [Tombol 3]'
     Cooldown: 20
     Value: 300
   Passive:
-    Name: Wind Steps
-    Desc: +12% Movement Speed permanen.
-    Value: 12
+    Name: Chain Lightning
+    Desc: 'Tiap basic attack yang mengenai musuh punya 16% peluang memicu chain lightning, dijamin memicu pada hit ke-10 tanpa proc. Chain menyambar 3 musuh terdekat dalam radius 6 dari target, masing-masing kena 50% damage awal. [Pasif]'
+    Value: 50

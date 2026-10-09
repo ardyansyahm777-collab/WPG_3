@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using WpgGame.Core;
 using WpgGame.Player;
 
@@ -28,6 +29,13 @@ namespace WpgGame.Combat
 
         [Tooltip("Jarak tempuh maksimal dari titik lahir (0 = tidak terbatas).")]
         public float MaxRange = 0f;
+
+        /// <summary>
+        /// Broadcast statis tiap proyektil player BERHASIL memberi damage: (korban, damage).
+        /// Dipakai pasif chain lightning Aelindra. Statis agar pendengar cukup subscribe
+        /// sekali tanpa melacak tiap instance pool. (Aditif: perilaku tembak-menembak tak berubah.)
+        /// </summary>
+        public static event Action<GameObject, float> OnProjectileHit;
 
         private Rigidbody2D _rb;
         private Vector2 _startPosition;
@@ -117,6 +125,7 @@ namespace WpgGame.Combat
             if (health == null || health.IsDead) return;
 
             health.TakeDamage(Damage);
+            OnProjectileHit?.Invoke(health.gameObject, Damage);
             PrefabPool.Despawn(gameObject);
         }
 
