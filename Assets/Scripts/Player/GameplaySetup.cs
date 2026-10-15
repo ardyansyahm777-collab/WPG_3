@@ -44,6 +44,12 @@ namespace WpgGame.Player
             if (spawner.Player == null && _player != null) spawner.Player = _player.transform;
             var shooter = _player != null ? _player.GetComponent<AutoAimShooter>() : null;
             if (shooter != null) shooter.ProjectilePrefab = GetOrCreateProjectileTemplate();
+            // Objek permanen (tanpa RuntimeSpawnTag): user atur styling via Inspector, tersimpan di scene.
+            if (Object.FindFirstObjectByType<DamagePopupManager>() == null)
+            {
+                var popups = new GameObject("[DamagePopups]");
+                popups.AddComponent<DamagePopupManager>();
+            }
             UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
             Debug.Log("[GameplaySetup] Bootstrap gameplay objects selesai (Player, Enemy template, Projectile template, Spawner).");
         }

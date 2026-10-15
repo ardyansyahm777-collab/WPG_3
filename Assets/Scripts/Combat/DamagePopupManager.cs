@@ -63,11 +63,24 @@ namespace WpgGame.Combat
         public static DamagePopupManager Ensure()
         {
             if (_instance != null) return _instance;
+            // Prioritas: pakai yang sudah dipasang permanen di scene (bisa di-set via Inspector).
+            var existing = FindFirstObjectByType<DamagePopupManager>();
+            if (existing != null)
+            {
+                _instance = existing;
+                return _instance;
+            }
             var go = new GameObject("[DamagePopups]");
             Core.RuntimeSpawnTag.Tag(go, "WpgGame.Combat.DamagePopupManager.Ensure");
             _instance = go.AddComponent<DamagePopupManager>();
             _instance.Prewarm();
             return _instance;
+        }
+
+        private void Awake()
+        {
+            if (_instance == null) _instance = this;
+            if (_free.Count == 0) Prewarm();
         }
 
         private void Prewarm()
