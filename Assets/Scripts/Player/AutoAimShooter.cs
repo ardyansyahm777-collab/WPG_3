@@ -173,7 +173,12 @@ namespace WpgGame.Player
                 var projectile = go.GetComponent<Projectile>();
                 if (projectile != null)
                 {
-                    projectile.Damage = _stats.Damage;
+                    // Crit roll per proyektil dari PlayerStats (CritChance %, CritDamage %).
+                    bool crit = Random.value * 100f < _stats.CritChance;
+                    float dmg = _stats.Damage;
+                    if (crit) dmg = dmg * Mathf.Max(100f, _stats.CritDamage) / 100f;
+                    projectile.Damage = dmg;
+                    projectile.IsCrit = crit;
                     projectile.Launch(dir);
                 }
             }

@@ -135,14 +135,14 @@ namespace WpgGame.Player
         {
             Subscribe(_skill1, HandleSkill1Performed);
             Subscribe(_skill2, HandleSkill2Performed);
-            Projectile.OnProjectileHit += HandleProjectileHit;
+            Projectile.OnProjectileHitDetailed += HandleProjectileHit;
         }
 
         private void OnDisable()
         {
             Unsubscribe(_skill1, HandleSkill1Performed, _ownSkill1);
             Unsubscribe(_skill2, HandleSkill2Performed, _ownSkill2);
-            Projectile.OnProjectileHit -= HandleProjectileHit;
+            Projectile.OnProjectileHitDetailed -= HandleProjectileHit;
 
             // Kembalikan template proyektil generik agar hero lain tak ikut ke-tint.
             if (_tintApplied && _shooter != null && _originalProjectilePrefab != null)
@@ -281,7 +281,7 @@ namespace WpgGame.Player
 
         // ================= Pasif: chain lightning =================
 
-        private void HandleProjectileHit(GameObject victim, float damage)
+        private void HandleProjectileHit(GameObject victim, float damage, bool isCrit)
         {
             if (victim == null || damage <= 0f) return;
             if (character != null && character.Id != "aelindra") return;
@@ -296,10 +296,10 @@ namespace WpgGame.Player
             if (!proc) return;
 
             _hitsSinceProc = 0;
-            FireChain(victim, damage);
+            FireChain(victim, damage, isCrit);
         }
 
-        private void FireChain(GameObject firstVictim, float baseDamage)
+        private void FireChain(GameObject firstVictim, float baseDamage, bool isCrit)
         {
             Vector2 origin = firstVictim.transform.position;
             float sqrRange = ChainRadius * ChainRadius;
@@ -346,6 +346,8 @@ namespace WpgGame.Player
 
                 Vector2 to = target.transform.position;
                 hs.TakeDamage(chainDamage); // kill → broadcast EnemyKilled seperti biasa
+                // Teruskan flag crit hit pemicu agar popup chain konsisten.
+                Projectile.RaiseHitDetailed(target.gameObject, chainDamage, isCrit);
                 SpawnBolt(origin, to);
             }
         }

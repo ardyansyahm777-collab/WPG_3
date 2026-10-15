@@ -30,12 +30,30 @@ namespace WpgGame.Combat
         [Tooltip("Jarak tempuh maksimal dari titik lahir (0 = tidak terbatas).")]
         public float MaxRange = 0f;
 
+        [Tooltip("True = hit ini hasil crit roll (di-set penembak sebelum Launch).")]
+        public bool IsCrit;
+
         /// <summary>
         /// Broadcast statis tiap proyektil player BERHASIL memberi damage: (korban, damage).
         /// Dipakai pasif chain lightning Aelindra. Statis agar pendengar cukup subscribe
         /// sekali tanpa melacak tiap instance pool. (Aditif: perilaku tembak-menembak tak berubah.)
         /// </summary>
         public static event Action<GameObject, float> OnProjectileHit;
+
+        /// <summary>
+        /// Varian detail (korban, damage, isCrit) untuk popup damage + teruskan flag crit ke chain.
+        /// Aditif: event lama tetap di-raise berdampingan, kontrak tak berubah.
+        /// </summary>
+        public static event Action<GameObject, float, bool> OnProjectileHitDetailed;
+
+        /// <summary>
+        /// Raise helper untuk event detail (event C# hanya bisa di-invoke dari
+        /// dalam tipe pendefinisi — dipakai chain lightning Aelindra).
+        /// </summary>
+        public static void RaiseHitDetailed(GameObject victim, float damage, bool isCrit)
+        {
+            OnProjectileHitDetailed?.Invoke(victim, damage, isCrit);
+        }
 
         private Rigidbody2D _rb;
         private Vector2 _startPosition;
@@ -126,6 +144,7 @@ namespace WpgGame.Combat
 
             health.TakeDamage(Damage);
             OnProjectileHit?.Invoke(health.gameObject, Damage);
+            RaiseHitDetailed(health.gameObject, Damage, IsCrit);
             PrefabPool.Despawn(gameObject);
         }
 

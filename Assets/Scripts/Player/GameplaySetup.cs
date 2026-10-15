@@ -95,6 +95,7 @@ namespace WpgGame.Player
             if (spawner.Player == null && player != null) spawner.Player = player.transform;
             EnsureEnemyCollisionMatrix();
             spawner.StartSpawning();
+            DamagePopupManager.Ensure();
         }
 
         /// <summary>

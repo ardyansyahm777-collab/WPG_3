@@ -23,6 +23,12 @@ namespace WpgGame.Combat
         /// <summary>Dipanggil tepat sekali ketika HP mencapai 0.</summary>
         public event Action OnDeath;
 
+        /// <summary>
+        /// Broadcast tiap TakeDamage yang lolos (amount = raw incoming, sebelum shield).
+        /// Aditif: dipakai popup damage merah ke player. Signature kontrak tak berubah.
+        /// </summary>
+        public event Action<float> OnDamaged;
+
         /// <summary>Shield aktif Aelindra: menyerap damage sebelum HP. Refresh (bukan stack).</summary>
         public float ShieldPoints { get; private set; }
 
@@ -41,6 +47,7 @@ namespace WpgGame.Combat
         public void TakeDamage(float amount)
         {
             if (IsDead || amount <= 0f) return;
+            OnDamaged?.Invoke(amount);
 
             // Shield terkuras dulu; overflow diteruskan ke HP.
             float remaining = amount;
