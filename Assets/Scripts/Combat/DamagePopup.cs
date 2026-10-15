@@ -45,9 +45,15 @@ namespace WpgGame.Combat
         }
 
         /// <summary>Tampilkan angka di posisi dunia dengan gaya sesuai jenis.</summary>
-        public void Show(Vector3 worldPos, float amount, DamagePopupKind kind,
-            float normalSize, float critSize, float playerSize, float life, float riseSpeed)
+        public void Show(Vector3 worldPos, float amount, DamagePopupKind kind)
         {
+            var home = _home;
+            float normalSize = home != null ? home.NormalFontSize : 7f;
+            float critSize = home != null ? home.CritFontSize : 10f;
+            float playerSize = home != null ? home.PlayerFontSize : 8f;
+            float life = home != null ? home.PopupLife : 0.7f;
+            float riseSpeed = home != null ? home.RiseSpeed : 1.1f;
+
             _life = Mathf.Max(0.1f, life);
             _age = 0f;
             _velocity = Vector3.up * Mathf.Max(0f, riseSpeed);
@@ -55,12 +61,16 @@ namespace WpgGame.Combat
             transform.localScale = Vector3.one;
             InUse = true;
 
+            // Font custom dari Inspector (null = font default TextMeshPro).
+            if (home != null && home.DamageFont != null && _tmp.font != home.DamageFont)
+                _tmp.font = home.DamageFont;
+
             _tmp.text = amount.ToString("0.#");
             switch (kind)
             {
                 case DamagePopupKind.Crit:
                     _tmp.fontSize = critSize;
-                    _tmp.color = new Color(1f, 0.85f, 0.2f);
+                    _tmp.color = home != null ? home.CritColor : new Color(1f, 0.85f, 0.2f);
                     _tmp.fontStyle = FontStyles.Bold;
                     _tmp.outlineWidth = 0.15f;
                     _tmp.outlineColor = Color.black;
@@ -68,14 +78,14 @@ namespace WpgGame.Combat
                     break;
                 case DamagePopupKind.Player:
                     _tmp.fontSize = playerSize;
-                    _tmp.color = new Color(1f, 0.3f, 0.25f);
+                    _tmp.color = home != null ? home.PlayerColor : new Color(1f, 0.3f, 0.25f);
                     _tmp.fontStyle = FontStyles.Bold;
                     _tmp.outlineWidth = 0.1f;
                     _tmp.outlineColor = Color.black;
                     break;
                 default:
                     _tmp.fontSize = normalSize;
-                    _tmp.color = Color.white;
+                    _tmp.color = home != null ? home.NormalColor : Color.white;
                     _tmp.fontStyle = FontStyles.Normal;
                     _tmp.outlineWidth = 0.08f;
                     _tmp.outlineColor = Color.black;

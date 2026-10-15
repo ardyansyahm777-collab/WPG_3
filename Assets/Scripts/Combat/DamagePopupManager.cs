@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using WpgGame.Player;
 
@@ -37,6 +38,19 @@ namespace WpgGame.Combat
 
         [Tooltip("Ukuran font world-space: damage ke player.")]
         public float PlayerFontSize = 8f;
+
+        [Tooltip("Font custom untuk semua popup (null = font default TextMeshPro). " +
+            "Buat via Window > TextMeshPro > Font Asset Creator, lalu drag ke sini.")]
+        public TMP_FontAsset DamageFont;
+
+        [Tooltip("Warna teks hit normal.")]
+        public Color NormalColor = Color.white;
+
+        [Tooltip("Warna teks crit.")]
+        public Color CritColor = new Color(1f, 0.85f, 0.2f);
+
+        [Tooltip("Warna teks damage yang diterima player.")]
+        public Color PlayerColor = new Color(1f, 0.3f, 0.25f);
 
         private static DamagePopupManager _instance;
 
@@ -166,8 +180,7 @@ namespace WpgGame.Combat
                 }
             }
             _active.Add(popup);
-            popup.Show(pos, amount, kind,
-                NormalFontSize, CritFontSize, PlayerFontSize, PopupLife, RiseSpeed);
+            popup.Show(pos, amount, kind);
         }
 
         /// <summary>Kembalikan popup ke pool (dipanggil DamagePopup saat usianya habis).</summary>
