@@ -6,12 +6,13 @@ namespace WpgGame.Combat
 {
     /// <summary>
     /// Jenis tampilan popup damage: hit normal (putih), crit (kuning besar),
-    /// atau damage yang diterima player (merah).
+    /// chain lightning (biru petir), atau damage yang diterima player (merah).
     /// </summary>
     public enum DamagePopupKind
     {
         Normal,
         Crit,
+        Chain,
         Player,
     }
 
@@ -50,6 +51,7 @@ namespace WpgGame.Combat
             var home = _home;
             float normalSize = home != null ? home.NormalFontSize : 7f;
             float critSize = home != null ? home.CritFontSize : 10f;
+            float chainSize = home != null ? home.ChainFontSize : 8f;
             float playerSize = home != null ? home.PlayerFontSize : 8f;
             float life = home != null ? home.PopupLife : 0.7f;
             float riseSpeed = home != null ? home.RiseSpeed : 1.1f;
@@ -76,8 +78,14 @@ namespace WpgGame.Combat
                     _tmp.outlineColor = Color.black;
                     transform.localScale = Vector3.one * 1.35f;
                     break;
-                case DamagePopupKind.Player:
-                    _tmp.fontSize = playerSize;
+                case DamagePopupKind.Chain:
+                    _tmp.fontSize = chainSize;
+                    _tmp.color = home != null ? home.ChainColor : new Color(0.35f, 0.85f, 1f);
+                    _tmp.fontStyle = FontStyles.Bold;
+                    _tmp.outlineWidth = 0.1f;
+                    _tmp.outlineColor = Color.black;
+                    break;
+                case DamagePopupKind.Player:                    _tmp.fontSize = playerSize;
                     _tmp.color = home != null ? home.PlayerColor : new Color(1f, 0.3f, 0.25f);
                     _tmp.fontStyle = FontStyles.Bold;
                     _tmp.outlineWidth = 0.1f;

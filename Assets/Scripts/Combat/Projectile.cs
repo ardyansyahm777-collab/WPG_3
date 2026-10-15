@@ -55,6 +55,18 @@ namespace WpgGame.Combat
             OnProjectileHitDetailed?.Invoke(victim, damage, isCrit);
         }
 
+        /// <summary>
+        /// Broadcast tiap damage chain lightning Aelindra: (korban, damage).
+        /// Terpisah dari hit proyektil agar popup chain bisa bergaya sendiri (biru petir).
+        /// </summary>
+        public static event Action<GameObject, float> OnChainHit;
+
+        /// <summary>Raise helper untuk <see cref="OnChainHit"/> (dipakai AelindraSkill).</summary>
+        public static void RaiseChainHit(GameObject victim, float damage)
+        {
+            OnChainHit?.Invoke(victim, damage);
+        }
+
         private Rigidbody2D _rb;
         private Vector2 _startPosition;
         private Vector2 _direction;

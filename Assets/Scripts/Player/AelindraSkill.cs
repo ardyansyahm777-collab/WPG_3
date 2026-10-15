@@ -296,10 +296,10 @@ namespace WpgGame.Player
             if (!proc) return;
 
             _hitsSinceProc = 0;
-            FireChain(victim, damage, isCrit);
+            FireChain(victim, damage);
         }
 
-        private void FireChain(GameObject firstVictim, float baseDamage, bool isCrit)
+        private void FireChain(GameObject firstVictim, float baseDamage)
         {
             Vector2 origin = firstVictim.transform.position;
             float sqrRange = ChainRadius * ChainRadius;
@@ -346,8 +346,8 @@ namespace WpgGame.Player
 
                 Vector2 to = target.transform.position;
                 hs.TakeDamage(chainDamage); // kill → broadcast EnemyKilled seperti biasa
-                // Teruskan flag crit hit pemicu agar popup chain konsisten.
-                Projectile.RaiseHitDetailed(target.gameObject, chainDamage, isCrit);
+                // Popup chain bergaya sendiri (biru petir) via event khusus.
+                Projectile.RaiseChainHit(target.gameObject, chainDamage);
                 SpawnBolt(origin, to);
             }
         }

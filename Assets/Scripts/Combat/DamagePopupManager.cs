@@ -49,6 +49,12 @@ namespace WpgGame.Combat
         [Tooltip("Warna teks crit.")]
         public Color CritColor = new Color(1f, 0.85f, 0.2f);
 
+        [Tooltip("Ukuran font world-space: chain lightning.")]
+        public float ChainFontSize = 8f;
+
+        [Tooltip("Warna teks chain lightning (biru petir).")]
+        public Color ChainColor = new Color(0.35f, 0.85f, 1f);
+
         [Tooltip("Warna teks damage yang diterima player.")]
         public Color PlayerColor = new Color(1f, 0.3f, 0.25f);
 
@@ -102,12 +108,14 @@ namespace WpgGame.Combat
         private void OnEnable()
         {
             Projectile.OnProjectileHitDetailed += HandleEnemyDamaged;
+            Projectile.OnChainHit += HandleChainDamaged;
             TryBindPlayer();
         }
 
         private void OnDisable()
         {
             Projectile.OnProjectileHitDetailed -= HandleEnemyDamaged;
+            Projectile.OnChainHit -= HandleChainDamaged;
             UnbindPlayer();
         }
 
@@ -151,8 +159,14 @@ namespace WpgGame.Combat
             Show(pos, damage, isCrit ? DamagePopupKind.Crit : DamagePopupKind.Normal);
         }
 
-        private void HandlePlayerDamaged(float amount)
+        private void HandleChainDamaged(GameObject victim, float damage)
         {
+            if (victim == null || damage <= 0f) return;
+            Vector3 pos = victim.transform.position + RandomOffset();
+            Show(pos, damage, DamagePopupKind.Chain);
+        }
+
+        private void HandlePlayerDamaged(float amount)        {
             if (_playerHealth == null || amount <= 0f) return;
             Vector3 pos = _playerHealth.transform.position + Vector3.up * 0.6f + RandomOffset();
             Show(pos, amount, DamagePopupKind.Player);
