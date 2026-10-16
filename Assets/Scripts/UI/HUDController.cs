@@ -344,7 +344,7 @@ namespace WpgGame.UI
         {
             if (killText != null)
             {
-                killText.text = "KILL " + killCount;
+                killText.text = "" + killCount;
             }
         }
 
